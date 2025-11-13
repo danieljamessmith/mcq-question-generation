@@ -1,4 +1,10 @@
 # Ignore project data directory
 /data/
+
 # Ignore img directory in 1-transcription
 /1-transcription/img/
+
+/1-transcription/output.jsonl
+/2-generation/gen.json
+/2-generation/gen.jsonl
+/3-extraction/output.tex
