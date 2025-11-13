@@ -1,0 +1,146 @@
+\documentclass[leqno]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{dsfont}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{float}
+
+% (ii) Added 'urlcolor=black' to make the link black
+\usepackage[colorlinks=true,linkcolor=red,citecolor=magenta,urlcolor=black]{hyperref}%
+\urlstyle{same} % (ii) Makes the link font match the body text
+
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{dirtytalk}
+
+\usepackage[margin=1.2in,headheight=1pt]{geometry}
+
+\usepackage{ragged2e}
+\usepackage{tensor}
+\usepackage{fancyhdr}
+\setlength{\parindent}{0cm}
+
+\usepackage{empheq}
+\usepackage[most]{tcolorbox}
+
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem*{definition*}{Definition}
+
+\renewcommand{\marks}[1]{\marginpar{\raggedleft\textbf{[#1]}}}
+
+% --- HEADER CONFIG ---
+\pagestyle{fancy}
+\fancyhead{} % Clear all default header fields
+\fancyfoot{} % Clear all footer fields
+\renewcommand{\headrulewidth}{0.8pt} % Set header rule width
+
+\lhead{Ella L} % Left header
+\chead{Real Analysis} % Center header
+\rhead{\href{https://danieljsmith.org}{danieljsmith.org}} % Right header
+% ---------------------
+
+\begin{document}
+
+\vspace*{0.5cm}
+\subsubsection*{Question 1}
+
+Let $x_n \in \mathbb{R}$ be a convergent sequences of real numbers. That is, suppose there exists some $L \in\mathbb{R}$ such that $x_n\xrightarrow[]{}L$. \\
+
+Prove that $x_n$ is a Cauchy sequence. \marks{5 Marks}\\[5pt]
+
+\textit{Hint:} Use the triangle inequality to show that $|x_n-x_m| \leq |x_n - L| + |x_m - L|$. Why is this useful? \\[20pt]
+
+\hrulefill
+\vspace{10pt}
+
+\subsubsection*{Question 2}
+
+Prove that the set of rational numbers $\mathbb{Q}$ is not \textit{complete} by giving an example of a Cauchy sequence $q_n\in\mathbb{Q}$ that does not converge to an element of $\mathbb{Q}$. \marks{10 Marks} \\[5pt]
+
+    \textit{Hint:} Build a sequence of rational approximations to $\sqrt{2}\approx 1.414213\dots$ \\ E.g. $q_1 = 1,\,q_2=1.4,\,q_3=1.41,\,q_4=1.414,\, q_5=\dots$ \\ Find an explicit formula for $q_n$. Why is this sequence Cauchy? Why does it not converge in $\mathbb{Q}$? \\[20pt]
+
+\hrulefill
+\vspace{10pt}
+\subsubsection*{Question 3}
+
+For the following sequences $x_n \in \mathbb{R}$, find 
+$\limsup\limits_{n\to\infty}x_n $, $\liminf\limits_{n\to\infty}x_n$ 
+and state if $x_n$ is a Cauchy sequence: \\[5pt]
+
+\begin{enumerate}[label=\textbf{(\alph*)}]
+    % Use \dfrac ("display-style fraction") to make them larger
+    \item \quad$x_n = \dfrac{-4 + (-1)^n}{2 + \dfrac{1}{3^n}}$ \\[10pt]
+
+    \item \quad$x_n = \dfrac{(-1)^n}{n} + \dfrac{2}{3^n}$ \\[8pt]
+
+    \item \quad$x_n = \dfrac{1}{(-1)^n+2+n^{-4}}$
+\end{enumerate} \marks{15 Marks}
+
+\newpage
+\subsubsection*{Question 4}
+
+For an arbitrary point $\mathbf{x} \in \mathbb{R}^k$ define the norms $||\mathbf{x}||_1$ and $||\mathbf{x}||_2$ as given in lectures. \\ [5pt]
+
+    True or False? For all $\mathbf{x} \in \mathbb{R}^k$ we have \\
+\[
+||\mathbf{x}||_2\leq||\mathbf{x}||_1 
+\] \vspace{2pt}
+
+Either give a proof or provide a counterexample. \marks{10 Marks} \\[7.5pt]
+
+\hrulefill
+\vspace{7.5}
+\subsubsection*{Question 5}
+
+\begin{enumerate}[label=\textbf{(\alph*)}]
+
+  \item
+  Complete the following statement of the Bolzano--Weierstrass theorem for sequences in $\mathbb{R}$ and its generalisation to sequences in $\mathbb{R}^k$:
+
+  \begin{theorem*}[Bolzano--Weierstrass] \
+  
+    If $(x_n)$ is a bounded sequence in $\mathbb{R}$, then $\dots$
+
+    More generally, if $(\mathbf{x}_n)$ is a bounded sequence in $\mathbb{R}^k$, then $\ddots$
+  \end{theorem*}
+  \marks{5 Marks}
+
+  \item
+  Give an example of an unbounded sequence $(x_n)$ in $\mathbb{R}$ that has a convergent subsequence $(x_{n_k})$.
+  Thus the converse of the Bolzano--Weierstrass theorem does not hold.
+  \marks{10 Marks}
+
+  \item
+  Decide which of the following sequences have a convergent subsequence $(x_{n_k})$.
+  Note that unboundedness is insufficient to deduce the non-existence of a convergent subsequence by part~\textbf{(b)}.
+  Justify your answers.
+
+  \begin{enumerate}[label=\textbf{(\roman*)}]
+    \item $x_n = 4\cos n$
+    \item $x_n = \dfrac{n\sin n}{1+n^2}$
+    \item $x_n = n + e^{-n}$
+    \item $x_n = \dfrac{\log n}{n}$ 
+    \item $x_n = \left(\log\log n, \, \dfrac{1}{n^2}\right)$
+    \item $x_n = \left( \dfrac{1000}{1+n},\, e^{-n},\, \dfrac{n^2}{n!},\, 3.2\right)$
+    \item $x_n \in \mathbb{R}^3$ is defined by
+      \[
+        x_n =
+        \begin{cases}
+          (n,0,0), & n \equiv 1 \pmod 3,\\
+          (0,n,0), & n \equiv 2 \pmod 3,\\
+          (0,0,n), & n \equiv 0 \pmod 3.
+        \end{cases}
+      \]
+      For example,
+      $x_1=(1,0,0)$, $x_2=(0,2,0)$, $x_3=(0,0,3)$, $x_4=(4,0,0)$, $x_5=(0,5,0)$, and so on.
+  \marks{25 Marks}
+  \end{enumerate}
+
+\end{enumerate}
+
+
+
+\end{document}

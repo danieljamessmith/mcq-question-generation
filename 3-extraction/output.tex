@@ -1,0 +1,185 @@
+\documentclass[leqno]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{dsfont}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{float}
+
+% (ii) Added 'urlcolor=black' to make the link black
+\usepackage[colorlinks=true,linkcolor=red,citecolor=magenta,urlcolor=black]{hyperref}%
+\urlstyle{same} % (ii) Makes the link font match the body text
+
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{dirtytalk}
+
+\usepackage[margin=1.2in,headheight=1pt]{geometry}
+
+\usepackage{ragged2e}
+\usepackage{tensor}
+\usepackage{fancyhdr}
+\setlength{\parindent}{0cm}
+
+\usepackage{empheq}
+\usepackage[most]{tcolorbox}
+
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem*{definition*}{Definition}
+
+\renewcommand{\marks}[1]{\marginpar{\raggedleft\textbf{[#1]}}}
+
+% --- HEADER CONFIG ---
+\pagestyle{fancy}
+\fancyhead{} % Clear all default header fields
+\fancyfoot{} % Clear all footer fields
+\renewcommand{\headrulewidth}{0.8pt} % Set header rule width
+
+\lhead{SAMPLE} % Left header
+\chead{} % Center header
+\rhead{} % Right header
+% ---------------------
+
+\begin{document}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=0.75ex]
+
+\item
+% Answer: 1 (Letter: B)
+
+PQRS is a quadrilateral, labelled anticlockwise.
+
+Which one of the following is a sufficient but not necessary condition for PQRS to be a parallelogram?
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $PR$ and $QS$ bisect each other \\[8pt]
+\textbf{B} & $PQ=QR=RS=SP$ \\[8pt]
+\textbf{C} & $\angle P + \angle R = 180^{\circ}$ and $\angle Q + \angle S = 180^{\circ}$ \\[8pt]
+\textbf{D} & $PR$ bisects $QS$ \\[30pt]
+\end{tabular}
+
+\hrulefill
+
+\item
+% Answer: 2 (Letter: C)
+
+A student chooses two distinct real numbers $x$ and $y$ with $0<x<y<1$.
+
+The student then attempts to draw a triangle $ABC$ with:
+
+\[
+\begin{array}{c}
+AB = 1, \qquad \cos A = x, \qquad \cos B = y
+\end{array}
+\]
+
+Which of the following statements is/are correct?
+
+\[
+\begin{array}{@{}l l@{}}
+\textbf{I:} & \text{For some choice of $x$ and $y$, there is no such triangle.} \\[2pt]
+\textbf{II:} & \text{For some choice of $x$ and $y$, there is exactly one such triangle.} \\[2pt]
+\textbf{III:} & \text{For some choice of $x$ and $y$, there are exactly two such triangles.}
+\end{array}
+\]
+
+(Note that congruent triangles are considered to be the same.)
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & None of them \\[2pt]
+\textbf{B} & I only \\[2pt]
+\textbf{C} & II only \\[2pt]
+\textbf{D} & III only \\[2pt]
+\textbf{E} & I and II only \\[2pt]
+\textbf{F} & I and III only \\[2pt]
+\textbf{G} & II and III only \\[2pt]
+\textbf{H} & I, II and III \\[12pt]
+\end{tabular}
+
+\hrulefill
+
+\item
+% Answer: 0 (Letter: A)
+
+Let $n>1$ be an integer. Consider the property $P(n)$:
+
+\[
+\begin{array}{c}
+\text{For all integers $a,b$, if $n\mid ab$ then $n\mid a$ or $n\mid b$.}
+\end{array}
+\]
+
+Which of the following is correct?
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $P(n)$ holds if and only if $n$ is prime \\[8pt]
+\textbf{B} & $P(n)$ holds if and only if $n$ is squarefree \\[8pt]
+\textbf{C} & $P(n)$ is sufficient but not necessary for $n$ to be prime \\[8pt]
+\textbf{D} & $P(n)$ holds if and only if $n$ is a prime power \\[8pt]
+\textbf{E} & $P(n)$ holds if and only if $n$ has at most two distinct prime factors \\[30pt]
+\end{tabular}
+
+\hrulefill
+
+\item
+% Answer: 0 (Letter: A)
+
+Let $a, b, n$ be positive integers and let $n = p_1^{e_1} p_2^{e_2} \cdots p_k^{e_k}$ be the prime factorization of $n$. Consider the statement
+\begin{equation}\tag{$\ast$}
+\text{$n$ divides $ab$.}
+\end{equation}
+The condition $C$ is:
+\[
+\begin{array}{c}
+\text{For every prime $p$ dividing $n$, either $p\mid a$ or $p\mid b$.}
+\end{array}
+\]
+
+This condition $C$ is:
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & necessary but not sufficient for ($\ast$) \\[6pt]
+\textbf{B} & sufficient but not necessary for ($\ast$) \\[6pt]
+\textbf{C} & necessary and sufficient for ($\ast$) \\[6pt]
+\textbf{D} & neither necessary nor sufficient for ($\ast$) \\[24pt]
+\end{tabular}
+
+\hrulefill
+
+\item
+% Answer: 0 (Letter: A)
+
+Let $P(n)$ be a statement about integers with the following properties:
+
+\[
+\begin{array}{l}
+\text{$P(1)$ and $P(2)$ are true;} \\[2pt]
+\text{for every integer $n\ge 1$, the conjunction $P(n)\wedge P(n+1)$ implies $P(n+2)$.}
+\end{array}
+\]
+
+What is the strongest conclusion that necessarily follows?
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $P(n)$ holds for all $n \ge 1$ \\[6pt]
+\textbf{B} & $P(n)$ holds for all sufficiently large $n$, but not necessarily for $n=1$ \\[6pt]
+\textbf{C} & $P(n)$ holds for infinitely many $n$, but not necessarily for all $n$ \\[6pt]
+\textbf{D} & No general conclusion can be drawn beyond $P(1)$ and $P(2)$ \\[24pt]
+\end{tabular}
+
+\hrulefill
+
+\end{enumerate}
+\end{document}

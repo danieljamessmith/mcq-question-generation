@@ -1,0 +1,96 @@
+\documentclass[leqno]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{dsfont}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{float}
+
+% (ii) Added 'urlcolor=black' to make the link black
+\usepackage[colorlinks=true,linkcolor=red,citecolor=magenta,urlcolor=black]{hyperref}%
+\urlstyle{same} % (ii) Makes the link font match the body text
+
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{dirtytalk}
+
+\usepackage[margin=1.2in,headheight=1pt]{geometry}
+
+\usepackage{ragged2e}
+\usepackage{tensor}
+\usepackage{fancyhdr}
+\setlength{\parindent}{0cm}
+
+\usepackage{empheq}
+\usepackage[most]{tcolorbox}
+
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem*{definition*}{Definition}
+
+\renewcommand{\marks}[1]{\marginpar{\raggedright\textbf{[#1]}}}
+
+% --- HEADER CONFIG ---
+\pagestyle{fancy}
+\fancyhead{} % Clear all default header fields
+\fancyfoot{} % Clear all footer fields
+\renewcommand{\headrulewidth}{0.8pt} % Set header rule width
+
+\lhead{India B} % Left header
+\chead{Further Mechanics} % Center header
+\rhead{\href{https://danieljsmith.org}{danieljsmith.org}} % Right header
+% ---------------------
+
+\begin{document}
+
+\vspace*{0.5cm}
+\subsection*{Question 1}
+\vspace{10pt}
+
+A car of mass $1200\text{ kg}$ moves in a straight line along a horizontal road at a constant speed $U\text{ms}^{-1}$. The resistance to the motion of the car is a constant force of magnitude $500\text{ N}$.
+
+The engine of the car is working at a constant rate of $20 \text{ kW}$.
+
+
+\begin{enumerate}[label=\textbf{(\alph*)}]
+
+\item Find the value of $U$ \marks{3 Marks}
+\end{enumerate}
+The car now pulls a trailer of mass $800\text{ kg}$ in a straight line along the road using a tow rope which is parallel to the direction of motion. The resistance to the motion of the car is again a constant force of magnitude $500\text{ N}$. The resistance to the motion of the trailer is a constant force of magnitude $400\text{ N}$.
+The engine of the car is working at a constant rate of $20\text{ kW}$.
+The tow rope is modelled as being light and inextensible. \\
+
+Using the model,
+\begin{enumerate}[label=\textbf{(\alph*)}, resume]
+\item find the tension in the tow rope at the instant when the speed of the car is $\dfrac{25}{3}\text{ ms}^{-1}$ \marks{5 Marks}
+\end{enumerate}
+
+\vspace{20pt}
+\hrulefill
+\vspace{20pt}
+
+\subsection*{Question 2}
+\vspace{10pt}
+
+A particle $P$ of mass $2m$ is moving in a straight line with speed $4u$ on a smooth horizontal plane. It collides directly with a particle $Q$ of mass $m$ that is moving on the plane with speed $3u$ in the opposite direction to $P$. \\[3pt]
+
+The coefficient of restitution between $P$ and $Q$ is $e$, where $e > \dfrac{5}{7}$.  \\[3pt]
+
+\begin{enumerate}[label=\textbf{(\alph*)}]
+\item Show that the speed of $Q$ immediately after the collision is $\dfrac{14e + 5}{3}u$ \marks{6 Marks} \\[3pt]
+\end{enumerate}
+
+After the collision $Q$ hits a smooth fixed vertical wall that is perpendicular to the direction of motion of $Q$. The coefficient of restitution between $Q$ and the wall is $f$. \\[3pt]
+
+\begin{enumerate}[label=\textbf{(\alph*)}, resume]
+\item Find, in terms of $e$, the set of values of $f$ for which there will be a second collision between $P$ and $Q$. \marks{4 Marks}
+\end{enumerate}
+
+\vspace{20pt}
+\hrulefill
+
+
+
+
+\end{document}
