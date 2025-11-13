@@ -1,2 +1,4 @@
 # Ignore project data directory
 /data/
+# Ignore img directory in 1-transcription
+/1-transcription/img/
