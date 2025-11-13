@@ -6,5 +6,7 @@
 
 /1-transcription/output.jsonl
 /2-generation/gen.json
+/2-generation/input.jsonl
 /2-generation/gen.jsonl
 /3-extraction/output.tex
+/3-extraction/input.jsonl
