@@ -1,102 +1,68 @@
 \begin{document}
 
-\vspace*{0.5cm}
-\subsubsection*{Question 1}
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=0.75ex]
+\item
+Let $p$ be a real constant. Consider the equation \[\sin x \cos x = p\] on $0 \le x < 2\pi$. Which of the following statements is/are true?
 
-Let $x_n \in \mathbb{R}$ be a convergent sequences of real numbers. That is, suppose there exists some $L \in\mathbb{R}$ such that $x_n\xrightarrow[]{}L$. \\
-
-Prove that $x_n$ is a Cauchy sequence. \marks{5 Marks}\\[5pt]
-
-\textit{Hint:} Use the triangle inequality to show that $|x_n-x_m| \leq |x_n - L| + |x_m - L|$. Why is this useful? \\[20pt]
-
-\hrulefill
-\vspace{10pt}
-
-\subsubsection*{Question 2}
-
-Prove that the set of rational numbers $\mathbb{Q}$ is not \textit{complete} by giving an example of a Cauchy sequence $q_n\in\mathbb{Q}$ that does not converge to an element of $\mathbb{Q}$. \marks{10 Marks} \\[5pt]
-
-    \textit{Hint:} Build a sequence of rational approximations to $\sqrt{2}\approx 1.414213\dots$ \\ E.g. $q_1 = 1,\,q_2=1.4,\,q_3=1.41,\,q_4=1.414,\, q_5=\dots$ \\ Find an explicit formula for $q_n$. Why is this sequence Cauchy? Why does it not converge in $\mathbb{Q}$? \\[20pt]
-
-\hrulefill
-\vspace{10pt}
-\subsubsection*{Question 3}
-
-For the following sequences $x_n \in \mathbb{R}$, find 
-$\limsup\limits_{n\to\infty}x_n $, $\liminf\limits_{n\to\infty}x_n$ 
-and state if $x_n$ is a Cauchy sequence: \\[5pt]
-
-\begin{enumerate}[label=\textbf{(\alph*)}]
-    % Use \dfrac ("display-style fraction") to make them larger
-    \item \quad$x_n = \dfrac{-4 + (-1)^n}{2 + \dfrac{1}{3^n}}$ \\[10pt]
-
-    \item \quad$x_n = \dfrac{(-1)^n}{n} + \dfrac{2}{3^n}$ \\[8pt]
-
-    \item \quad$x_n = \dfrac{1}{(-1)^n+2+n^{-4}}$
-\end{enumerate} \marks{15 Marks}
-
-\newpage
-\subsubsection*{Question 4}
-
-For an arbitrary point $\mathbf{x} \in \mathbb{R}^k$ define the norms $||\mathbf{x}||_1$ and $||\mathbf{x}||_2$ as given in lectures. \\ [5pt]
-
-    True or False? For all $\mathbf{x} \in \mathbb{R}^k$ we have \\
 \[
-||\mathbf{x}||_2\leq||\mathbf{x}||_1 
-\] \vspace{2pt}
+\begin{array}{@{}l l@{}}
+\textbf{I:} & \text{If } |p|<\tfrac12 \text{ then the equation has exactly 4 distinct solutions.} \\[2pt]
+\textbf{II:} & \text{If the equation has exactly 2 distinct solutions, then } |p|=\tfrac12 .
+\end{array}
+\]
 
-Either give a proof or provide a counterexample. \marks{10 Marks} \\[7.5pt]
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & None of them \\[2pt]
+\textbf{B} & I only \\[2pt]
+\textbf{C} & II only \\[2pt]
+\textbf{D} & I and II
+\end{tabular} \\[2pt]
 
 \hrulefill
-\vspace{7.5}
-\subsubsection*{Question 5}
+\item
 
-\begin{enumerate}[label=\textbf{(\alph*)}]
+  For a positive integer \(n\), consider the identity
+  \[
+    \sum_{k=0}^{n-1}\cos\!\left(\theta+\frac{k\pi}{2}\right)=0
+  \]
+  for all real $\theta$. Which of the following is a \textbf{necessary and sufficient} condition on \(n\)
+  for the identity to hold?
 
-  \item
-  Complete the following statement of the Bolzano--Weierstrass theorem for sequences in $\mathbb{R}$ and its generalisation to sequences in $\mathbb{R}^k$:
+\vspace{0.75cm}
 
-  \begin{theorem*}[Bolzano--Weierstrass] \
-  
-    If $(x_n)$ is a bounded sequence in $\mathbb{R}$, then $\dots$
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $n$ is odd \\[2pt]
+\textbf{B} & $n$ is even \\[2pt]
+\textbf{C} & $n$ is a multiple of 3 \\[2pt]
+\textbf{D} & $n$ is a multiple of 4 \\[2pt]
+\textbf{E} & $n$ is 1 more than a multiple of 4 \\[2pt]
+\textbf{F} & $n$ is 2 more than a multiple of 4 \\[2pt]
+\end{tabular} \\[2pt]
 
-    More generally, if $(\mathbf{x}_n)$ is a bounded sequence in $\mathbb{R}^k$, then $\ddots$
-  \end{theorem*}
-  \marks{5 Marks}
+\hrulefill
 
-  \item
-  Give an example of an unbounded sequence $(x_n)$ in $\mathbb{R}$ that has a convergent subsequence $(x_{n_k})$.
-  Thus the converse of the Bolzano--Weierstrass theorem does not hold.
-  \marks{10 Marks}
+\item   We say a sequence of real numbers $x_n$ converges to a real number $L$
+  if for all $\varepsilon>0$ there exists a positive integer $N\in\mathbb{N}$ such that if
+  $n\ge N$ then $|x_n-L|<\varepsilon$.  \\[5pt]
+  Which one of the following statements is true if and only if
+  $x_n$ does \textbf{not} converge to $L$?
 
-  \item
-  Decide which of the following sequences have a convergent subsequence $(x_{n_k})$.
-  Note that unboundedness is insufficient to deduce the non-existence of a convergent subsequence by part~\textbf{(b)}.
-  Justify your answers.
+\vspace{0.75cm}
 
-  \begin{enumerate}[label=\textbf{(\roman*)}]
-    \item $x_n = 4\cos n$
-    \item $x_n = \dfrac{n\sin n}{1+n^2}$
-    \item $x_n = n + e^{-n}$
-    \item $x_n = \dfrac{\log n}{n}$ 
-    \item $x_n = \left(\log\log n, \, \dfrac{1}{n^2}\right)$
-    \item $x_n = \left( \dfrac{1000}{1+n},\, e^{-n},\, \dfrac{n^2}{n!},\, 3.2\right)$
-    \item $x_n \in \mathbb{R}^3$ is defined by
-      \[
-        x_n =
-        \begin{cases}
-          (n,0,0), & n \equiv 1 \pmod 3,\\
-          (0,n,0), & n \equiv 2 \pmod 3,\\
-          (0,0,n), & n \equiv 0 \pmod 3.
-        \end{cases}
-      \]
-      For example,
-      $x_1=(1,0,0)$, $x_2=(0,2,0)$, $x_3=(0,0,3)$, $x_4=(4,0,0)$, $x_5=(0,5,0)$, and so on.
-  \marks{25 Marks}
-  \end{enumerate}
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & There exists $\varepsilon>0$ such that for every $N\in\mathbb{N}$ there exists $n\ge N$ with $|x_n-L|\ge \varepsilon$ \\[5pt]
+\textbf{B} & For every $\varepsilon>0$ there exists $N\in\mathbb{N}$ and there exists $n\ge N$ with $|x_n-L|\ge \varepsilon$ \\[5pt]
+\textbf{C} & There exists $N\in\mathbb{N}$ such that for every $\varepsilon>0$ and every $n\ge N$ we have $|x_n-L|\ge \varepsilon$ \\[5pt]
+\textbf{D} & For every $\varepsilon>0$ and for every $N\in\mathbb{N}$ there exists $n\ge N$ with $|x_n-L|<\varepsilon$ \\[5pt]
+\textbf{E} & There exists $\varepsilon>0$ and there exists $N\in\mathbb{N}$ such that for all $n\ge N$ we have $|x_n-L|\ge \varepsilon$ \\[5pt]
+\textbf{F} & For every $N\in\mathbb{N}$ there exists $\varepsilon>0$ such that for all $n\ge N$ we have $|x_n-L|\ge \varepsilon$ \\[5pt]
+\textbf{G} & There exists $\varepsilon>0$ such that there exists $N\in\mathbb{N}$ and for all $n\ge N$ we have $|x_n-L|<\varepsilon$ \\[5pt]
+\textbf{H} & For every $\varepsilon>0$ there exists $N\in\mathbb{N}$ such that there exists $n\ge N$ with $|x_n-L|<\varepsilon$ \\[12pt]
+\end{tabular}
+
+\hrulefill
 
 \end{enumerate}
-
-
-
 \end{document}

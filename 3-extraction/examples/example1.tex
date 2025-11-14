@@ -1,222 +1,125 @@
-\documentclass[leqno]{article}
-\usepackage[utf8]{inputenc}
-\usepackage{graphicx}
-\usepackage{dsfont}
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usepackage{amsthm}
-\usepackage{float}
-
-% (ii) Added 'urlcolor=black' to make the link black
-\usepackage[colorlinks=true,linkcolor=red,citecolor=magenta,urlcolor=black]{hyperref}%
-\urlstyle{same} % (ii) Makes the link font match the body text
-
-\usepackage{mathtools}
-\usepackage{enumitem}
-\usepackage{dirtytalk}
-
-\usepackage[margin=1.2in,headheight=1pt]{geometry}
-
-\usepackage{ragged2e}
-\usepackage{tensor}
-\usepackage{fancyhdr}
-\setlength{\parindent}{0cm}
-
-\usepackage{empheq}
-\usepackage[most]{tcolorbox}
-
-\newtheorem*{theorem*}{Theorem}
-\newtheorem{definition}{Definition}
-\newtheorem*{definition*}{Definition}
-
-% --- HEADER CONFIG ---
-\pagestyle{fancy}
-\fancyhead{} % Clear all default header fields
-\fancyfoot{} % Clear all footer fields
-\renewcommand{\headrulewidth}{0.8pt} % Set header rule width
-
-\lhead{SAMPLE} % Left header
-\chead{} % Center header
-\rhead{} % Right header
-% ---------------------
-
 \begin{document}
-
-\vspace*{1cm}
+\vspace*{10pt}
 \begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=0.75ex]
 
-\item We say a real function $f(x)$ is \textit{continuous} at a point $x_0 \in \mathbb{R}$ if
-
-
-\[
-\begin{array}{c}
-\text{for all $\varepsilon>0$ there exists $\delta>0$ such that for all $x\in\mathbb{R}$,} \\[2pt]
-\text{if $|x-x_0|<\delta$ then $|f(x)-f(x_0)|<\varepsilon$}
-\end{array}
-\]
-
-
-Which one of the following statements is true if and only if
-$f$ is \textbf{not} continuous at $x_0$?
-
-\vspace{0.75cm}
-
-\begin{tabular}{@{}ll@{}}
-\textbf{A} & There exists $\varepsilon>0$ such that for every $\delta>0$ there exists $x$ with 
-$|x-x_0|<\delta$ and $|f(x)-f(x_0)|\ge \varepsilon$ \\[8pt]
-\textbf{B} & For every $\varepsilon>0$ and every $\delta>0$ there exists $x$ with 
-$|x-x_0|<\delta$ and $|f(x)-f(x_0)|\ge \varepsilon$ \\[8pt]
-\textbf{C} & There exists $\varepsilon>0$ and $\delta>0$ such that for all $x$ with 
-$|x-x_0|<\delta$ we have $|f(x)-f(x_0)|\ge \varepsilon$ \\[8pt]
-\textbf{D} & There exists $\varepsilon>0$ such that for every $\delta>0$ we have $|x-x_0|\ge \delta$ or $|f(x)-f(x_0)|\ge \varepsilon$ \\[8pt]
-\textbf{E} & For every $\varepsilon>0$ and every $\delta>0$ there exists $x$ with 
-$|x-x_0|<\delta$ and $|f(x)-f(x_0)|< \varepsilon$ \\[8pt]
-\textbf{F} & There exists $\delta>0$ such that for all $\varepsilon>0$ and all $x$ with 
-$|x-x_0|<\delta$ we have $|f(x)-f(x_0)|<\varepsilon$ \\[8pt]
-\textbf{G} & For every $\varepsilon>0$ there exists $\delta>0$ such that there exists $x$ with 
-$|x-x_0|<\delta$ and $|f(x)-f(x_0)|\ge \varepsilon$ \\[8pt]
-\textbf{H} & There exists $\varepsilon>0$ such that for every $\delta>0$ if $|x-x_0|<\delta$ then $|f(x)-f(x_0)|\ge \varepsilon$ \\[30pt]
-
-\end{tabular}
-
-\hrulefill
-\vspace{30pt}
-
-\item We say a sequence of real numbers $x_n$ is \textit{a Cauchy sequence} if
-
-
-\[
-\begin{array}{c}
-\text{for all $\varepsilon>0$ there exists a positive integer $N \in\mathbb{N}$ such that}  \\[2pt]
-\text{for all $n,m \geq N$ we have $|x_n - x_m | < \varepsilon$}
-\end{array}
-\]
-
-
-Which one of the following statements is true if and only if
-$x_n$ is \textbf{not} a Cauchy sequence?
-
-\vspace{0.75cm}
-
-\begin{tabular}{@{}ll@{}}
-\textbf{A} & There exists $\varepsilon>0$ such that for every $N\in\mathbb{N}$ there exist 
-$m,n\ge N$ with $|x_m-x_n|\ge \varepsilon$ \\[8pt]
-\textbf{B} & For every $\varepsilon>0$ there exists $N\in\mathbb{N}$ and there exists 
-$m,n\ge N$ with $|x_m-x_n|\ge \varepsilon$ \\[8pt]
-\textbf{C} & There exists $N\in\mathbb{N}$ such that for all $\varepsilon>0$ and all $m,n\ge N$
-we have $|x_m-x_n|\ge \varepsilon$ \\[8pt]
-\textbf{D} & For every $\varepsilon>0$ and every $N\in\mathbb{N}$ there exists $m,n\ge N$
-with $|x_m-x_n|<\varepsilon$ \\[8pt]
-\textbf{E} & There exists $\varepsilon>0$ and there exists $N\in\mathbb{N}$ such that 
-for all $m,n\ge N$ we have $|x_m-x_n|\ge \varepsilon$ \\[8pt]
-\textbf{F} & For every $N\in\mathbb{N}$ there exists $\varepsilon>0$ such that for all $m,n\ge N$
-we have $|x_m-x_n|\ge \varepsilon$ \\[30pt]
-\end{tabular}
-
-
-\hrulefill
-\newpage
-
-\vspace*{1cm}
-
-\item Let $f(x),\, g(x)$ and $h(x)$ be real functions and consider the statement
-
-\begin{equation}\tag{$\ast$}
-\text{If $x>0$ and $f(x)\le 0$ then $g(x)\neq 1$ or $h(x)\ge -1$.}\\[5pt]
-\end{equation}
-
-
-Which of the following statements is the \textit{contrapositive} of ($\ast$)?
-
-\vspace{0.75cm}
-
-\begin{tabular}{@{}ll@{}}
-\textbf{A} & If $g(x) = 1$ and $h(x) < -1$ then $x \le 0$ or $f(x) > 0$. \\[8pt]
-\textbf{B} & If $g(x) = 1$ or $h(x) < -1$ then $x \le 0$ or $f(x) > 0$. \\[8pt]
-\textbf{C} & If $x \le 0$ or $f(x) > 0$ then $g(x) = 1$ and $h(x) < -1$. \\[8pt]
-\textbf{D} & If $g(x) \neq 1$ or $h(x) \ge -1$ then $x > 0$ and $f(x) \le 0$. \\[8pt]
-\textbf{E} & If $x > 0$ and $f(x) \le 0$ then $g(x) = 1$ and $h(x) < -1$. \\[30pt]
-\end{tabular}
-
-\hrulefill
-\vspace*{30pt}
-
-\item Let $f(x),\, g(x),\, h(x)$ and $k(x)$ be real functions and consider the statement
-
-
-\begin{equation}\tag{$\ast$}
-\text{If $0<x<1$ and $f(x) > g(x)$, then $h(x) = 0$ or $k(x) \ge 5$.}\\[5pt]
-\end{equation}
-
-
-Which of the following statements is the \textit{contrapositive} of $(\ast)$?
-
-\vspace{0.75cm}
-
-\begin{tabular}{@{}ll@{}}
-
-\textbf{A} & If $h(x) \neq 0$ or $k(x) < 5$ then $x \le 0$ or $x \ge 1$ or $f(x) \le g(x)$. \\[8pt]
-\textbf{B} & If $h(x) \neq 0$ and $k(x) < 5$ then $x \le 0$ or $x \ge 1$ and $f(x) \le g(x)$. \\[8pt]
-\textbf{C} & If $h(x) \neq 0$ and $k(x) < 5$ then $x \le 0$ or $x \ge 1$ or $f(x) \le g(x)$. \\[8pt]
-\textbf{D} & If $x \le 0$ or $x \ge 1$ or $f(x) \le g(x)$ then $h(x) \neq 0$ and $k(x) < 5$. \\[8pt]
-\textbf{E} & If $h(x) = 0$ or $k(x) \ge 5$ then $0<x<1$ and $f(x) > g(x)$. \\[30pt]
-\end{tabular}
-
-\hrulefill
-\newpage
-\vspace*{1cm}
 \item
-Consider the following statement about irrational numbers:
-\begin{equation}\tag{$\ast$}
-\text{If $x$ and $y$ are irrational numbers, then $x + y$ is irrational.}
-\end{equation}
+% Answer: 1 (Letter: B)
 
-Which of the following pair(s) $(x,y)$ provide(s) a \textit{counterexample} to $(\ast)$?
+PQRS is a quadrilateral, labelled anticlockwise.
+
+Which one of the following is a \textbf{sufficient} but \textbf{not necessary} condition for PQRS to be a parallelogram?
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $PR$ and $QS$ bisect each other \\[8pt]
+\textbf{B} & $PQ=QR=RS=SP$ \\[8pt]
+\textbf{C} & $\angle P + \angle R = 180^{\circ}$ and $\angle Q + \angle S = 180^{\circ}$ \\[8pt]
+\textbf{D} & $PR$ bisects $QS$ \\[30pt]
+\end{tabular}
+
+\hrulefill
+\vspace{10pt}
+\item
+
+
+% Answer: 2 (Letter: C)
+A student chooses two distinct real numbers $x$ and $y$ with $0<x<y<1$
+
+The student then attempts to draw a triangle $ABC$ with:
+
+\[
+\begin{array}{c}
+AB = 1 \\  \cos A = x \\ \cos B = y
+\end{array}
+\]
+
+Which of the following statements is/are correct?
 
 \[
 \begin{array}{@{}l l@{}}
-\textbf{I:} & x = \sqrt{2},\ y = \sqrt{2} \\[2pt]
-\textbf{II:} & x = \sqrt{2},\ y = 3 \\[2pt]
-\textbf{III:} & x = 1 + \sqrt{2},\ y = 1 - \sqrt{2}
+\textbf{I:} & \text{For some choice of $x$ and $y$, there is no such triangle.} \\[2pt]
+\textbf{II:} & \text{For some choice of $x$ and $y$, there is exactly one such triangle.} \\[2pt]
+\textbf{III:} & \text{For some choice of $x$ and $y$, there are exactly two such triangles.}
 \end{array}
 \]
+
+(Note that congruent triangles are considered to be the same.)
 
 \vspace{0.75cm}
 
 \begin{tabular}{@{}ll@{}}
-\textbf{A} & none of them \\[2pt]
+\textbf{A} & None of them \\[2pt]
 \textbf{B} & I only \\[2pt]
 \textbf{C} & II only \\[2pt]
 \textbf{D} & III only \\[2pt]
 \textbf{E} & I and II only \\[2pt]
 \textbf{F} & I and III only \\[2pt]
 \textbf{G} & II and III only \\[2pt]
-\textbf{H} & I, II and III \\[30pt]
+\textbf{H} & I, II and III \\[12pt]
 \end{tabular}
 
 \hrulefill
-
-\vspace*{30pt}
+\newpage
+\vspace*{10pt}
 
 \item
-Consider the following statement about a polynomial $p(x)$ with real coefficients:
+% Answer: 0 (Letter: A)
+
+
+We say an integer $x$ \textit{divides} an integer $y$ and write $x \,|\, y $ if there exists an integer $k$ such that $y = kx$
+
+Let $a, b, n$ be positive integers. Let $(\ast)$ the statement
 \begin{equation}\tag{$\ast$}
-\text{If $p(n)$ is even for every integer $n$, then every coefficient of $p(x)$ is even.}
+n \,|\, ab
 \end{equation}
+Let C be the statement:
+\[
+\begin{array}{c}
+\text{For every prime $p$ with $p \,|\, n$, either $p\mid a$ or $p\mid b$}
+\end{array}
+\]
 
-Which one of the following is a \textit{counterexample} to $(\ast)$?
+This condition $C$ is:
 
-\vspace{0.5cm}
+\vspace{0.75cm}
 
 \begin{tabular}{@{}ll@{}}
-\textbf{A} & $p(x) = x^{2} + x$ \\[6pt]
-\textbf{B} & $p(x) = 2x^{2} + 4$ \\[6pt]
-\textbf{C} & $p(x) = 2x^{2} + x$ \\[6pt]
-\textbf{D} & $p(x) = 4x^{3} + 2x$ \\[30pt]
+\textbf{A} & \textbf{necessary} but \textbf{not sufficient} for ($\ast$) \\[6pt]
+\textbf{B} & \textbf{sufficient} but \textbf{not necessary} for ($\ast$) \\[6pt]
+\textbf{C} & \textbf{necessary} and \textbf{sufficient} for ($\ast$) \\[6pt]
+\textbf{D} & \textbf{neither necessary nor sufficient} for ($\ast$) \\[24pt]
 \end{tabular}
 
 \hrulefill
+\vspace{10pt}
+\item
+% Answer: 0 (Letter: A)
 
+Let $P(n)$ be a statement about integers with the following properties:
+
+\[
+\begin{array}{l}
+\text{$P(1)$ and $P(2)$ are true;} \\[8pt]
+\text{for all } n\geq1 \text{ the following statement is true:}\\[2pt]
+\qquad \left(P(n) \textbf{ and } P(n+1)\right) \text{ is \textbf{sufficient }for } P(n+2)
+\end{array}
+\]
+
+What is the strongest conclusion that necessarily follows?
+
+\vspace{0.75cm}
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $P(n)$ is true for all $n \ge 1$ \\[6pt]
+\textbf{B} & $P(n)$ is true for all sufficiently large $n$, but not necessarily for all $n$  \\[6pt]
+\textbf{C} & $P(n)$ is true for infinitely many $n$, but not necessarily for all $n$ \\[6pt]
+\textbf{D} & $P(n)$ is true for all odd $n$ but not necessarily for all even $n$ \\[6pt]
+\textbf{E} & $P(n)$ is true for all even $n$ but not necessarily for all odd $n$ \\[6pt]
+\textbf{F} & No general conclusion can be drawn beyond $P(1)$ and $P(2)$ \\[24pt]
+\end{tabular}
+
+\hrulefill
 
 \end{enumerate}
 \end{document}
