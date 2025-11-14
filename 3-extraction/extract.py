@@ -71,15 +71,15 @@ def load_example_tex_files(examples_dir):
 
 def extract_latex_from_json(questions, prompt_text, examples, special_prompt=""):
     """
-    Use OpenAI API to convert JSON questions to LaTeX format
-    based on provided examples.
+    Use OpenAI API to convert JSON questions to LaTeX snippets (one per question)
+    based on provided examples. Returns individual snippets delimited by LaTeX comments.
     """
     # Start timing
     start_time = time.time()
     
     # Format examples for the prompt
     examples_text = "\n\n".join([
-        f"Example from {ex['filename']}:\n```latex\n{ex['content']}\n```"
+        f"Example snippet from {ex['filename']}:\n```latex\n{ex['content']}\n```"
         for ex in examples
     ])
     
@@ -95,7 +95,7 @@ def extract_latex_from_json(questions, prompt_text, examples, special_prompt="")
     # Construct the full prompt
     full_prompt = f"""{prompt_text}{special_prompt_text}
 
-**EXAMPLE LaTeX DOCUMENTS (COMPLETE WITH PREAMBLES):**
+**EXAMPLE LaTeX SNIPPETS:**
 
 {examples_text}
 
@@ -105,18 +105,20 @@ def extract_latex_from_json(questions, prompt_text, examples, special_prompt="")
 {questions_text}
 ```
 
-IMPORTANT: Generate a COMPLETE, COMPILABLE LaTeX document (including \\documentclass, all \\usepackage statements, preamble configurations, \\begin{{document}}, the formatted questions, and \\end{{document}}). 
+IMPORTANT: Generate INDIVIDUAL LaTeX SNIPPETS for each question. DO NOT include \\documentclass, \\usepackage, preamble, or \\begin{{document}}/\\end{{document}}.
 
-The output must be ready to save as a .tex file and compile immediately without errors.
+Each snippet should:
+1. Start with: % ===== QUESTION [N] =====
+2. Include answer key comment: % Answer: [index] (Letter: [A/B/C/...])
+3. Contain the formatted question content
+4. End with: % ===== END QUESTION [N] =====
 
-Copy ALL package imports, custom commands, and configurations from the example documents.
-
-**ANSWER KEYS:** Each question includes an "answer_key" field (0-indexed: 0=A, 1=B, 2=C, etc.). Include this as a LaTeX comment immediately after each \\item line in the format: % Answer: [index] (Letter: [A/B/C/...]).
+The output should be an array of independent, self-contained snippets that match the style of the examples.
 """
     
-    print("\n--- Starting LaTeX Extraction ---")
+    print("\n--- Starting LaTeX Snippet Extraction ---")
     print(f"Using {len(examples)} example file(s) as style reference")
-    print(f"Converting {len(questions)} question(s)")
+    print(f"Converting {len(questions)} question(s) to individual snippets")
     if special_prompt.strip():
         print(f"Special prompt: '{special_prompt}'")
     print("Sending request to OpenAI API...")
@@ -153,7 +155,7 @@ Copy ALL package imports, custom commands, and configurations from the example d
 
 
 def main():
-    """Main function to extract and format LaTeX from JSON."""
+    """Main function to extract and format LaTeX snippets from JSON questions."""
     # Start overall timing
     script_start_time = time.time()
     
@@ -220,9 +222,9 @@ def main():
         # Parse the JSON response
         response_obj = json.loads(result)
         
-        # Expect response to have a "latex_document" string (complete document)
-        if "latex_document" not in response_obj:
-            print("Error: Response does not contain 'latex_document' field")
+        # Expect response to have a "latex_snippets" array
+        if "latex_snippets" not in response_obj:
+            print("Error: Response does not contain 'latex_snippets' field")
             print(f"Response keys: {list(response_obj.keys())}")
             
             # Try to save raw response for debugging
@@ -232,19 +234,22 @@ def main():
             print(f"Raw response saved to {debug_file}")
             return
         
-        latex_output = response_obj["latex_document"]
-        print(f"\n[OK] Successfully extracted complete LaTeX document")
+        latex_snippets = response_obj["latex_snippets"]
+        print(f"\n[OK] Successfully extracted {len(latex_snippets)} LaTeX snippet(s)")
+        
+        # Combine snippets with blank lines between them
+        latex_output = "\n\n".join(latex_snippets)
         
         # Write to output file
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             f.write(latex_output)
         
-        print(f"[OK] Saved complete LaTeX document to {OUTPUT_FILE}")
+        print(f"[OK] Saved {len(latex_snippets)} snippet(s) to {OUTPUT_FILE}")
         
         # Print preview
-        print("\n--- Preview (first 500 characters) ---")
-        print(latex_output[:500])
-        if len(latex_output) > 500:
+        print("\n--- Preview (first 800 characters) ---")
+        print(latex_output[:800])
+        if len(latex_output) > 800:
             print("...")
         
     except json.JSONDecodeError as e:
