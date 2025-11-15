@@ -18,8 +18,9 @@ OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
 INPUT_FILE = SCRIPT_DIR / "input.jsonl"
-PROMPT_FILE = SCRIPT_DIR / "gen_prompt.txt"
-CRITIC_PROMPT_FILE = SCRIPT_DIR / "critic_prompt.txt"
+PROMPT_FILE = SCRIPT_DIR / "prompt_gen.txt"
+CRITIC_PROMPT_FILE = SCRIPT_DIR / "prompt_critic.txt"
+LEVEL_PROMPT_FILE = SCRIPT_DIR / "prompt_level.txt"
 OUTPUT_JSON = SCRIPT_DIR / "gen.json"
 OUTPUT_JSONL = SCRIPT_DIR / "gen.jsonl"
 
@@ -47,7 +48,7 @@ def load_examples(input_file):
     return examples
 
 
-def generate_questions(examples, prompt_text, special_prompt=""):
+def generate_questions(examples, prompt_text, level_prompt_text, special_prompt=""):
     """Generate novel questions using OpenAI API."""
     # Start timing
     start_time = time.time()
@@ -58,6 +59,12 @@ def generate_questions(examples, prompt_text, special_prompt=""):
         for i, example in enumerate(examples)
     ])
     
+    # Inject level prompt if provided
+    if level_prompt_text.strip():
+        level_prompt_section = f"\n\n**Level Requirements:**\n{level_prompt_text}"
+    else:
+        level_prompt_section = ""
+    
     # Inject special prompt if provided
     if special_prompt.strip():
         special_prompt_text = f"\n\n**SPECIAL INSTRUCTIONS (light guidance, prioritize examples):** {special_prompt}"
@@ -65,7 +72,7 @@ def generate_questions(examples, prompt_text, special_prompt=""):
         special_prompt_text = ""
     
     # Construct the full prompt
-    full_prompt = f"{prompt_text}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}"
+    full_prompt = f"{prompt_text}{level_prompt_section}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}"
     
     print("\n--- Starting Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
@@ -104,7 +111,7 @@ def generate_questions(examples, prompt_text, special_prompt=""):
     return result, input_tokens, output_tokens
 
 
-def validate_question(question, critic_prompt_text):
+def validate_question(question, critic_prompt_text, level_prompt_text):
     """Validate a question using the critic prompt."""
     # Start timing
     start_time = time.time()
@@ -112,8 +119,14 @@ def validate_question(question, critic_prompt_text):
     # Format the question for validation
     question_text = json.dumps(question, indent=2, ensure_ascii=False)
     
+    # Inject level prompt if provided
+    if level_prompt_text.strip():
+        level_prompt_section = f"\n\n**Level Requirements to Check:**\n{level_prompt_text}"
+    else:
+        level_prompt_section = ""
+    
     # Construct the full prompt
-    full_prompt = f"{critic_prompt_text}\n\nQuestion to evaluate:\n\n{question_text}"
+    full_prompt = f"{critic_prompt_text}{level_prompt_section}\n\nQuestion to evaluate:\n\n{question_text}"
     
     # Call OpenAI API
     response = client.chat.completions.create(
@@ -124,7 +137,7 @@ def validate_question(question, critic_prompt_text):
                 "content": full_prompt
             }
         ],
-        max_completion_tokens=5000,  # Increased to allow for reasoning tokens + response
+        max_completion_tokens=10000,  # Increased to allow for reasoning tokens + response
         response_format={"type": "json_object"},
     )
     
@@ -176,12 +189,13 @@ def main():
         print("No special prompt provided (using default behavior)")
     
     # Clear output files at the start
-    if OUTPUT_JSON.exists():
-        OUTPUT_JSON.unlink()
-    if OUTPUT_JSONL.exists():
-        OUTPUT_JSONL.unlink()
+    OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
+        pass  # Empty the file
+    with open(OUTPUT_JSONL, 'w', encoding='utf-8') as f:
+        pass  # Empty the file
     
-    print("\nLoading prompt, critic prompt, and examples...")
+    print("\nLoading prompts and examples...")
     
     # Load prompt
     prompt_text = load_text_file(PROMPT_FILE)
@@ -191,6 +205,15 @@ def main():
         print(f"Error: {CRITIC_PROMPT_FILE} not found")
         return
     critic_prompt_text = load_text_file(CRITIC_PROMPT_FILE)
+    
+    # Load level prompt (optional)
+    level_prompt_text = ""
+    if LEVEL_PROMPT_FILE.exists():
+        level_prompt_text = load_text_file(LEVEL_PROMPT_FILE)
+        if level_prompt_text.strip():
+            print(f"Loaded level requirements from {LEVEL_PROMPT_FILE}")
+    else:
+        print(f"Note: {LEVEL_PROMPT_FILE} not found, proceeding without level restrictions")
     
     # Load examples from input.jsonl
     if not INPUT_FILE.exists():
@@ -207,7 +230,7 @@ def main():
     
     # Generate questions
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, special_prompt)
+        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, level_prompt_text, special_prompt)
         
         # Track token usage
         total_input_tokens += input_tokens
@@ -225,6 +248,22 @@ def main():
         generated_questions = response_obj["questions"]
         print(f"\n[OK] Successfully generated {len(generated_questions)} question(s)")
         
+        # Add 'valid' field as the first key in each question
+        for i, question in enumerate(generated_questions):
+            # Create new dict with 'valid' as first key
+            generated_questions[i] = {"valid": None, **question}
+        
+        # Save generated questions to gen.json (pretty printed)
+        with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+            json.dump(generated_questions, f, indent=2, ensure_ascii=False)
+        print(f"[OK] Saved {len(generated_questions)} question(s) to {OUTPUT_JSON} (awaiting validation)")
+        
+        # Save to gen.jsonl (one JSON per line)
+        with open(OUTPUT_JSONL, "w", encoding="utf-8") as f:
+            for question in generated_questions:
+                f.write(json.dumps(question, ensure_ascii=False) + "\n")
+        print(f"[OK] Saved to {OUTPUT_JSONL} (awaiting validation)")
+        
         # Validate each question using the critic
         print(f"\n--- Starting Validation Pass ---")
         validated_questions = []
@@ -237,7 +276,7 @@ def main():
                 time.sleep(1)
             
             try:
-                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text)
+                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text, level_prompt_text)
                 
                 # Track token usage
                 total_input_tokens += input_tokens
@@ -252,11 +291,22 @@ def main():
                 print(f"  Answer correct: {answer_correct}")
                 print(f"  Overall: {'[PASSED]' if overall_pass else '[FAILED]'}")
                 
+                # Update the valid field
+                question["valid"] = overall_pass
+                
                 if not overall_pass:
-                    print(f"  Reason: {reasoning[:200]}...")
+                    print(f"  Full validation reasoning:")
+                    print(f"  {reasoning}")
                 
                 if overall_pass:
                     validated_questions.append(question)
+                
+                # Update files in-place after each validation
+                with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+                    json.dump(generated_questions, f, indent=2, ensure_ascii=False)
+                with open(OUTPUT_JSONL, "w", encoding="utf-8") as f:
+                    for q in generated_questions:
+                        f.write(json.dumps(q, ensure_ascii=False) + "\n")
                     
             except Exception as e:
                 print(f"  [ERROR] Error during validation: {e}")
@@ -267,28 +317,17 @@ def main():
         
         print(f"\n--- Validation Complete ---")
         print(f"Passed: {len(validated_questions)}/{len(generated_questions)} questions")
+        print(f"[OK] All questions saved to {OUTPUT_JSON} and {OUTPUT_JSONL} with validation status")
         
         if not validated_questions:
-            print("\n[ERROR] No questions passed validation. No files saved.")
-            return
-        
-        # Save only validated questions to gen.json (pretty printed)
-        with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
-            json.dump(validated_questions, f, indent=2, ensure_ascii=False)
-        print(f"\n[OK] Saved {len(validated_questions)} validated question(s) to {OUTPUT_JSON} (pretty JSON)")
-        
-        # Save to gen.jsonl (one JSON per line)
-        with open(OUTPUT_JSONL, "w", encoding="utf-8") as f:
-            for question in validated_questions:
-                f.write(json.dumps(question, ensure_ascii=False) + "\n")
-        print(f"[OK] Saved to {OUTPUT_JSONL} (JSONL)")
-        
-        # Print summary
-        print("\nValidated questions summary:")
-        for i, q in enumerate(validated_questions, 1):
-            topics = q.get("topics", [])
-            difficulty = q.get("difficulty", "N/A")
-            print(f"  {i}. Difficulty: {difficulty}, Topics: {', '.join(topics)}")
+            print("\n[WARNING] No questions passed validation.")
+        else:
+            # Print summary
+            print("\nValidated questions summary:")
+            for i, q in enumerate(validated_questions, 1):
+                topics = q.get("topics", [])
+                difficulty = q.get("difficulty", "N/A")
+                print(f"  {i}. Difficulty: {difficulty}, Topics: {', '.join(topics)}")
         
     except json.JSONDecodeError as e:
         print(f"Error: Failed to parse JSON response: {e}")
@@ -325,11 +364,14 @@ def main():
     
     if clear_response == 'y':
         try:
-            if INPUT_FILE.exists():
-                INPUT_FILE.unlink()
-                print(f"✓ Cleared {INPUT_FILE}")
-            else:
-                print(f"File {INPUT_FILE} does not exist.")
+            # Create parent directory if it doesn't exist
+            INPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Empty the file (or create it if it doesn't exist)
+            with open(INPUT_FILE, 'w', encoding='utf-8') as f:
+                pass  # Write nothing to empty the file
+            
+            print(f"✓ Cleared {INPUT_FILE}")
         except Exception as e:
             print(f"✗ Error clearing file: {e}")
     else:

@@ -21,7 +21,7 @@ OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
 SCRIPT_DIR = Path(__file__).parent
 IMG_DIR = SCRIPT_DIR / "img"
 OUTPUT_FILE = SCRIPT_DIR / "output.jsonl"
-PROMPT_FILE = SCRIPT_DIR / "prompt.txt"
+PROMPT_FILE = SCRIPT_DIR / "prompt_transcribe.txt"
 TEMPLATE_FILE = SCRIPT_DIR.parent / "json template.txt"
 
 

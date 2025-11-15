@@ -3,14 +3,12 @@ You are an expert exam question generator specializing in creating high-quality,
 Given example questions below, generate between 2 and 5 NEW questions that:
 
 1. Are NOVEL - do not copy or slightly modify the examples. Create genuinely new questions.
-2. Have a difficulty level of 1-5. 
-3. Follow the same format and style as the examples.
-4. Cover similar or related topics, but explore different aspects or scenarios.
-5. Use proper LaTeX formatting for all mathematical expressions:
+2. Follow the same format and style as the examples.
+3. Cover similar or related topics, but explore different aspects or scenarios.
+4. Use proper LaTeX formatting for all mathematical expressions:
    • Use inline LaTeX with $...$ for math expressions (e.g., "$x^2$", "$\\frac{1}{2}$")
    • Use display LaTeX with \\[...\\] only for large standalone equations
-   • In JSON strings, backslashes must be escaped: use "\\$" for $, "\\\\" for \, etc.
-6. Are level-appropriate for an advanced high-school student but are strictly LOWER level than undergraduate level. 
+   • In JSON strings, backslashes must be escaped: use "\\$" for $, "\\\\" for \, etc. 
 
 Each generated question MUST include:
 - "id": null (will be assigned later)

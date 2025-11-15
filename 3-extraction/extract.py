@@ -18,7 +18,8 @@ OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
 INPUT_FILE = SCRIPT_DIR / "input.jsonl"
-PROMPT_FILE = SCRIPT_DIR / "extract_prompt.txt"
+PROMPT_FILE = SCRIPT_DIR / "prompt_extract.txt"
+STYLE_PROMPT_FILE = SCRIPT_DIR / "prompt_style.txt"
 EXAMPLES_DIR = SCRIPT_DIR / "examples"
 OUTPUT_FILE = SCRIPT_DIR / "output.tex"
 
@@ -69,7 +70,7 @@ def load_example_tex_files(examples_dir):
     return examples
 
 
-def extract_latex_from_json(questions, prompt_text, examples, special_prompt=""):
+def extract_latex_from_json(questions, prompt_text, style_prompt_text, examples, special_prompt=""):
     """
     Use OpenAI API to convert JSON questions to LaTeX snippets (one per question)
     based on provided examples. Returns individual snippets delimited by LaTeX comments.
@@ -86,6 +87,12 @@ def extract_latex_from_json(questions, prompt_text, examples, special_prompt="")
     # Format questions for the prompt
     questions_text = json.dumps(questions, indent=2, ensure_ascii=False)
     
+    # Inject style prompt if provided
+    if style_prompt_text.strip():
+        style_prompt_section = f"\n\n**Style Requirements:**\n{style_prompt_text}"
+    else:
+        style_prompt_section = ""
+    
     # Inject special prompt if provided
     if special_prompt.strip():
         special_prompt_text = f"\n\n**SPECIAL INSTRUCTIONS:** {special_prompt}"
@@ -93,7 +100,7 @@ def extract_latex_from_json(questions, prompt_text, examples, special_prompt="")
         special_prompt_text = ""
     
     # Construct the full prompt
-    full_prompt = f"""{prompt_text}{special_prompt_text}
+    full_prompt = f"""{prompt_text}{style_prompt_section}{special_prompt_text}
 
 **EXAMPLE LaTeX SNIPPETS:**
 
@@ -172,16 +179,26 @@ def main():
         print("No special prompt provided (using default behavior)")
     
     # Clear output file at the start
-    if OUTPUT_FILE.exists():
-        OUTPUT_FILE.unlink()
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        pass  # Empty the file
     
-    print("\nLoading prompt, examples, and input questions...")
+    print("\nLoading prompts, examples, and input questions...")
     
     # Load prompt
     if not PROMPT_FILE.exists():
         print(f"Error: {PROMPT_FILE} not found")
         return
     prompt_text = load_text_file(PROMPT_FILE)
+    
+    # Load style prompt (optional)
+    style_prompt_text = ""
+    if STYLE_PROMPT_FILE.exists():
+        style_prompt_text = load_text_file(STYLE_PROMPT_FILE)
+        if style_prompt_text.strip():
+            print(f"Loaded style requirements from {STYLE_PROMPT_FILE}")
+    else:
+        print(f"Note: {STYLE_PROMPT_FILE} not found, proceeding without style requirements")
     
     # Load example .tex files
     if not EXAMPLES_DIR.exists():
@@ -212,7 +229,7 @@ def main():
     # Extract and convert to LaTeX
     try:
         result, input_tokens, output_tokens = extract_latex_from_json(
-            questions, prompt_text, examples, special_prompt
+            questions, prompt_text, style_prompt_text, examples, special_prompt
         )
         
         # Track token usage
@@ -295,11 +312,14 @@ def main():
     
     if clear_response == 'y':
         try:
-            if INPUT_FILE.exists():
-                INPUT_FILE.unlink()
-                print(f"✓ Cleared {INPUT_FILE}")
-            else:
-                print(f"File {INPUT_FILE} does not exist.")
+            # Create parent directory if it doesn't exist
+            INPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Empty the file (or create it if it doesn't exist)
+            with open(INPUT_FILE, 'w', encoding='utf-8') as f:
+                pass  # Write nothing to empty the file
+            
+            print(f"✓ Cleared {INPUT_FILE}")
         except Exception as e:
             print(f"✗ Error clearing file: {e}")
     else:

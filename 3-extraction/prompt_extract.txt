@@ -10,6 +10,8 @@ You will receive:
    - "choices": An array of answer choices (0-indexed)
    - "answer_key": The correct answer index (0-indexed integer, where 0=A, 1=B, 2=C, etc.)
 
+**CRITICAL: The input JSON may contain notation that violates the style guide (e.g. `\land`, `\lor`, `\Rightarrow`). You MUST replace any forbidden notation according to the style requirements, even if it appears in the input.**
+
 **OUTPUT REQUIREMENTS:**
 
 **CRITICAL: You MUST generate INDIVIDUAL LaTeX SNIPPETS for each question, NOT a complete compilable document!**
@@ -34,42 +36,12 @@ You will receive:
    - End with a delimiter comment: `% ===== END QUESTION [N] =====`
    - Add blank lines between snippets for readability
 
-3. **Match the style** of the provided examples:
-   - Question numbering and formatting
-   - Math notation and display mode usage
-   - Spacing patterns
-   - Choice formatting (tabular environment with @{}ll@{} alignment)
-   - Choice labels (A, B, C, D, etc.)
-   - Separators between sections (like `\hrulefill`)
-
-4. **Handle LaTeX escaping properly:**
+3. **Handle LaTeX escaping properly:**
    - Convert \$ to $ for proper LaTeX math mode
    - Convert \\ to \ for LaTeX commands
    - Preserve math notation correctly
 
-5. **Detect special patterns:**
-   - Roman numeral statements (I, II, III) should be formatted as an array environment:
-     ```latex
-     \[
-     \begin{array}{@{}l l@{}}
-     \textbf{I:} & statement text \\[2pt]
-     \textbf{II:} & statement text
-     \end{array}
-     \]
-     ```
-   - **Formal statements or definitions** (especially those serving as the target of a negation question) should be formatted using a centered array environment:
-     ```latex
-     \[
-     \begin{array}{c}
-     \text{for all $\varepsilon>0$ there exists $\delta>0$ such that for all $x\in\mathbb{R}$,} \\[2pt]
-     \text{if $|x-x_0|<\delta$ then $|f(x)-f(x_0)|<\varepsilon$}
-     \end{array}
-     \]
-     ```
-   - Multi-line prompts with display math should use \[...\] notation
-   - Inline math should use $...$ notation
-
-6. **Output format:** Return a JSON object with a "latex_snippets" array containing individual question snippets:
+4. **Output format:** Return a JSON object with a "latex_snippets" array containing individual question snippets:
    ```json
    {
      "latex_snippets": [
@@ -87,8 +59,6 @@ You will receive:
 - Maintain consistent styling across all snippets
 - Ensure proper LaTeX syntax within snippets
 - Preserve all mathematical notation exactly as it appears in the JSON (after unescaping)
-- **Format formal statements elegantly** using centered array environments
-- Roman numeral statements should be visually distinct and properly formatted
 
 Generate clean, professional LaTeX snippets that match the quality and style of the provided examples.
 

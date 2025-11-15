@@ -1,0 +1,14 @@
+=== LEVEL INSTRUCTIONS ===
+---
+Questions should be level-appropriate for an advanced high-school student but are strictly LOWER level than undergraduate level. 
+---
+So, in particular, no direct knowledge of:
+[Real Analysis, Abstract Algebra, Modular Arithmatic, etc] should be required. 
+Questions that *indirectly* touch on such topics without e.g. the specific notations are fine. 
+---
+Do not use $Leftarrow$, $\Rightarrow$ or $\Leftrightarrow$. Preferred is always textual synonyms like "necessary", "sufficient" "if and only if" etc. 
+---
+In fact, somewhat arbitary permuatation of such terms 
+(e.g. "P implies Q" is the same as "P is sufficient for Q" is the same as "Q if P" is the same as "Q is necessary for P" etc etc) 
+is encouraged as the TMUA directly tests this.
+---
