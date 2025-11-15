@@ -26,91 +26,106 @@
   - **NO `\hrulefill`** at the end of even-numbered questions
   - The single `\hrulefill` serves as the visual divider between top and bottom questions
 
-- **Spacing pattern (STRICT):**
-  ```latex
-  \vspace*{15pt}          ← Top margin (after \newpage) - modest increase
-  \item Question N (odd)   ← Top question
-  Content...
-  \\[36-42pt]             ← End of answer choices (increased spacing)
-  \end{tabular}
-  
-  \vfill                  ← Flexible space (expands to fill)
-  \hrulefill              ← ONLY hrulefill on page (auto-centered)
-  \vfill                  ← Flexible space (expands to fill)
-  
-  \item Question N+1 (even) ← Bottom question
-  Content...
-  \\[36-42pt]             ← End of answer choices (increased spacing)
-  \end{tabular}
-  
-  \vspace*{2.5cm}         ← Fixed bottom margin (increased but not excessive)
-  \newpage                ← Page break after even questions
-  ```
-  
-  **Why this works:** Two `\vfill` commands share available vertical space equally, automatically centering the `\hrulefill` between them. The spacing is calibrated to fit 2 questions per page without overflow.
-  
-  **CRITICAL:** Fixed vertical space must not exceed ~6cm total (15pt + 36pt + 36pt + 2.5cm ≈ 5.8cm) to leave room for question content within the ~22cm text height.
+- **Spacing pattern (MATCH THE PROVIDED EXAMPLE):**
 
-- **Within-question spacing:** 
-  - Between prompt and choices: typically `\vspace{0.9cm}` to `\vspace{1.1cm}` (slight increase for better visual separation)
-  - **Between individual choices:** Use `\\[9pt]` to `\\[10pt]` (increased from implicit 6-8pt)
-  - After last choice (before \end{tabular}): Use `\\[36pt]` to `\\[42pt]` (increased from 30-36pt)
-    - Complex questions with many choices or arrays: `\\[42pt]`
-    - Simpler/shorter questions: `\\[36pt]` is sufficient 
+  For each pair of questions on a page, reproduce the following structure (abstracted from the “perfect” example):
+
+  1. Top (odd-numbered) question:
+     - Start directly with the question header and item:
+       % ===== QUESTION N =====
+       % Answer: ...
+       \item
+       Question N content...
+     - End the final line of the question text with a line break, typically:
+       \\[9pt]
+     - Then start the choices in a tabular:
+       \begin{tabular}{@{}ll@{}}
+       \textbf{A} & Option A \\[9pt]
+       \textbf{B} & Option B \\[9pt]
+       ...
+       \end{tabular}
+       % ===== END QUESTION N =====
+
+  2. Middle-of-page separator:
+       \vfill
+       \hrulefill
+       \vfill
+
+  3. Bottom (even-numbered) question:
+       % ===== QUESTION N+1 =====
+       % Answer: ...
+       \item
+       Question N+1 content...
+       \\[9pt]
+
+       \begin{tabular}{@{}ll@{}}
+       \textbf{A} & Option A \\[9pt]
+       \textbf{B} & Option B \\[9pt]
+       ...
+       \end{tabular}
+       % ===== END QUESTION N+1 =====
+
+  4. Bottom-of-page and page break:
+       \vspace*{40pt}
+       \newpage
+       \vspace*{15pt}
+
+  - Repeat this pattern for (Q1,Q2), (Q3,Q4), (Q5,Q6), etc., exactly as in the example.
+  - After every \newpage, start the next odd-numbered question following the \vspace*{15pt} top margin.
+
+  **Why this works:** Two \vfill commands share available vertical space equally, automatically centering the \hrulefill between them. The combination of \vfill blocks, the fixed \vspace*{40pt} at the bottom of each even-numbered question, and the \vspace*{15pt} after each \newpage reproduces the spacing and layout seen in the provided example pages.
+
+- **Within-question spacing (FOLLOW THE EXAMPLE):** 
+  - Between the end of the main question text and the start of the choices, end the last question line with `\\[9pt]` before the `tabular` of options.
+  - **Between individual choices:** Use `\\[9pt]` between options inside the `tabular`, as in the example.
+  - After the last choice, simply end the `tabular`. Do not add additional large vertical skips at the end of the choices; vertical separation between questions and pages is handled by the surrounding `\vfill`, `\vspace*{40pt}`, and `\vspace*{15pt}` pattern.
 
 **Detect special patterns:**
 - Roman numeral statements (I, II, III) should be formatted as an array environment:
-  ```latex
   \[
   \begin{array}{@{}l l@{}}
-  \textbf{I:} & statement text \\[2pt]
-  \textbf{II:} & statement text
+  \textbf{I:} & \text{statement text} \\[2pt]
+  \textbf{II:} & \text{statement text}
   \end{array}
   \]
-  ```
 - **CRITICAL - Long text in arrays**: If a statement is too long (>80 characters), BREAK IT ACROSS MULTIPLE ROWS rather than using a single `\text{}` command:
-  ```latex
-  \textbf{III:} & \text{Therefore, for every positive integer $n$, the value $n^2+n+41$} \\
+  \[
+  \begin{array}{@{}l l@{}}
+  \textbf{III:} & \text{Therefore, for every positive integer $n$, the value $n^2+n+41$} \\[2pt]
   & \text{cannot be written as a product of two integers greater than $1$}
-  ```
+  \end{array}
+  \]
   NEVER put very long sentences in a single `\text{}` as they will overflow the page. Break at natural phrase boundaries.
   
-- **Critical spacing notes:**
-  - **Top margin:** `\vspace*{15pt}` after each `\newpage` (modest increase, prevents overflow)
-  - **Between choices:** Use `\\[9-10pt]` between individual options (noticeable increase)
-  - **After odd questions:** End with `\\[36-42pt]` then `\end{tabular}` - NO `\hrulefill`
-  - **Middle of page:** `\vfill` → `\hrulefill` → `\vfill` (auto-centers the separator)
-  - **After even questions:** End with `\\[36-42pt]` then `\end{tabular}` - NO `\hrulefill`
-  - **Bottom margin:** `\vspace*{2.5cm}` provides good spacing without causing page overflow
-  - **Page capacity:** Total fixed spacing (~5.8cm) must leave ~16cm for question content to avoid overflow
-  
+- **Critical spacing notes (synchronised with the example):**
+  - **Top margin after a page break:** use `\vspace*{15pt}` immediately after each `\newpage` before the next odd-numbered question.
+  - **Between choices:** use `\\[9pt]` between individual options in `tabular` environments.
+  - **Middle of page:** always use `\vfill` → `\hrulefill` → `\vfill` between the top (odd) and bottom (even) questions; this centers the separator.
+  - **After odd questions:** end with `\end{tabular}`, then the `\vfill \hrulefill \vfill` block — no extra `\hrulefill` attached to the question itself.
+  - **After even questions:** end with `\end{tabular}`, then `\vspace*{40pt} \newpage \vspace*{15pt}` — no extra `\hrulefill` attached to the question itself.
+  - This pattern exactly matches the layout and spacing used in the supplied “perfect” LaTeX example.
+
 - **Formal statements or definitions** (especially those serving as the target of a negation question) should be formatted using a centered array environment:
-  ```latex
   \[
   \begin{array}{c}
   \text{for all $\varepsilon>0$ there exists $\delta>0$ such that for all $x\in\mathbb{R}$,} \\[2pt]
   \text{if $|x-x_0|<\delta$ then $|f(x)-f(x_0)|<\varepsilon$}
   \end{array}
   \]
-  ```
   
 - **Display mode for key equations/definitions**:
   - Equations central to the question should use `\[ \]` display mode
   - Function definitions in question text should use display mode: `\[f(x) = a^{\cos x} + a^{-\cos x}\]`
   - Graph equations should use `\[ \]` or `\begin{align*}...\end{align*}` for multiple equations
   - Statement references like $(\ast)$ should be center-aligned when defining them:
-    ```latex
     \[\text{statement content here}\tag{$\ast$}\]
-    ```
     or
-    ```latex
     \[
     \begin{array}{c}
     \text{statement content}
     \end{array}
     \tag{$\ast$}
     \]
-    ```
 - Multi-line prompts with display math should use \[...\] notation
 - Inline math should use $...$ notation
 
@@ -163,6 +178,3 @@
   - **"parity"** → REPLACE with plain language:
     - "$a$ and $b$ have the same parity" → "$a$ and $b$ are both even or both odd"
   - If you see these terms in input JSON, **you MUST replace them** even if they seem correct
-
-
-

@@ -23,78 +23,14 @@ You will receive:
 - Only replace violations. If the input already uses correct notation (like "if and only if" written out), keep it!
 - Process ALL questions in the input, even if they seem unusual or meta-logical in structure
 - Some questions intentionally reference "undefined statements" as part of logic puzzles - these are valid
-- **Page layout:** Optimize question order and spacing to avoid split questions and excessive white space (see style guide for details)
 
 **OUTPUT REQUIREMENTS:**
 
 **CRITICAL: You MUST generate INDIVIDUAL LaTeX SNIPPETS for each question, NOT a complete compilable document!**
 
-1. **STRICT PAGE STRUCTURE:** Generate EXACTLY 2 questions per page
-   - **Odd questions (Q1, Q3, Q5...)** go at TOP of pages
-   - **Even questions (Q2, Q4, Q6...)** go at BOTTOM of pages
-   - **ONE `\hrulefill`** per page, placed BETWEEN the two questions
-   - NO `\hrulefill` at end of individual questions
-
-2. **Format pattern (MUST FOLLOW):**
-     ```latex
-     \vspace*{15pt}
-     % ===== QUESTION 1 =====
-     % Answer: 2 (Letter: C)
-     \item
-     Question 1 content...
-     
-     \begin{tabular}{@{}ll@{}}
-     \textbf{A} & Option A \\[9pt]
-     \textbf{B} & Option B \\[9pt]
-     \textbf{C} & Option C \\[36pt]
-     \end{tabular}
-     % ===== END QUESTION 1 =====
-     
-     \vfill
-     \hrulefill
-     \vfill
-     
-     % ===== QUESTION 2 =====
-     % Answer: 1 (Letter: B)
-     \item
-     Question 2 content...
-     
-     \begin{tabular}{@{}ll@{}}
-     \textbf{A} & Option A \\[9pt]
-     \textbf{B} & Option B \\[36pt]
-     \end{tabular}
-     % ===== END QUESTION 2 =====
-     
-     \vspace*{2.5cm}
-     \newpage
-     \vspace*{15pt}
-     % ===== QUESTION 3 =====
-     % Answer: 0 (Letter: A)
-     \item
-     Question 3 content...
-     \\[36pt]
-     \end{tabular}
-     % ===== END QUESTION 3 =====
-     
-     \vfill
-     \hrulefill
-     \vfill
-     
-     % ===== QUESTION 4 =====
-     ...
-     ```
-     
-     Note: Between choices use \\[9-10pt], after last choice use \\[36-42pt]
-
 3. **Key structural rules:**
    - Each snippet should be self-contained
    - NO `\documentclass`, `\usepackage`, preamble, `\begin{document}`, or `\end{document}`
-   - **Spacing within answer choices:** Use `\\[9-10pt]` between individual options, `\\[36-42pt]` after the final option
-   - **Odd questions:** NO `\hrulefill` at end - they end with `\end{tabular}`
-   - **After odd questions:** Place `\vfill\n\hrulefill\n\vfill` as SEPARATE element (the two \vfill's auto-center the \hrulefill)
-   - **Even questions:** NO `\hrulefill` at end - they end with `\end{tabular}`
-   - **After even questions:** `\vspace*{2.5cm}\n\newpage\n\vspace*{15pt}` before next odd question (calibrated to prevent overflow)
-   - **Page capacity note:** These values ensure 2 questions fit per page without causing LaTeX overflow errors
 
 4. **Individual question format:**
    - Start with a delimiter comment: `% ===== QUESTION [N] =====`
@@ -110,41 +46,31 @@ You will receive:
 
 6. **Output format:** Return a JSON object with a "latex_snippets" array.
    
-   **IMPORTANT:** The array should contain ALL elements in sequence, including:
-   - Question snippets (with comments, \item, content, ending with \end{tabular})
-   - Separator elements ("\vfill\n\hrulefill\n\vfill") - two \vfill's auto-center the \hrulefill
-   - Page break elements ("\vspace*{2.5cm}\n\newpage\n\vspace*{15pt}") - calibrated spacing
+   **IMPORTANT:** The array should contain all elements in sequence so that joining them with "\n\n" produces the final document. It may contain:
+   - Question snippets (with comments, \item blocks, content, and choice tabular environments)
+   - Additional LaTeX snippets (such as separators or page breaks) needed so that the assembled document respects the layout defined in the style instructions
    
-   Example structure:
-   ```json
+   Example structure (abstract):
    {
      "latex_snippets": [
-       "\\vspace*{15pt}\n% ===== QUESTION 1 =====\n% Answer: 0 (Letter: A)\n\\item\nQ1 content...\n\\\\[36pt]\n\\end{tabular}\n% ===== END QUESTION 1 =====",
-       "\\vfill\n\\hrulefill\n\\vfill",
-       "% ===== QUESTION 2 =====\n% Answer: 1 (Letter: B)\n\\item\nQ2 content...\n\\\\[36pt]\n\\end{tabular}\n% ===== END QUESTION 2 =====",
-       "\\vspace*{2.5cm}\n\\newpage\n\\vspace*{15pt}",
-       "% ===== QUESTION 3 =====\n...",
-       "\\vfill\n\\hrulefill\n\\vfill",
-       "% ===== QUESTION 4 =====\n..."
+       "Question 1 snippet...",
+       "Separator snippet...",
+       "Question 2 snippet...",
+       "Page-break snippet...",
+       "Question 3 snippet...",
+       "Separator snippet...",
+       "Question 4 snippet..."
      ]
    }
-   ```
-   
-   This ensures proper assembly: Top margin (15pt) → Q1 → **Centered separator** → Q2 → Bottom margin (2.5cm) + Page break → Q3 → **Centered separator** → Q4 → ...
-   
-   **CRITICAL:** These spacing values prevent page overflow while maintaining clean aesthetics
 
 **IMPORTANT NOTES:**
 - Output should be SNIPPETS ONLY, no document structure
-- The "latex_snippets" array contains BOTH question snippets AND structural elements (separators, page breaks)
+- The "latex_snippets" array may contain both question snippets and structural elements (such as separators and page-break snippets)
 - Question snippets are delimited by clear LaTeX comment markers (% ===== QUESTION N =====)
-- Structural elements (\vfill\hrulefill\vfill, \vspace*{}\newpage\vspace*{}) are standalone array items
-- The double \vfill technique automatically centers the \hrulefill in available vertical space
 - Include answer keys as LaTeX comments for grading
 - Maintain consistent styling across all snippets
 - Ensure proper LaTeX syntax within snippets
 - Preserve all mathematical notation exactly as it appears in the JSON (after unescaping)
 - The array will be joined with "\n\n" to create the final document
 
-Generate clean, professional LaTeX snippets that match the quality and style of the provided examples.
-
+Generate clean, professional LaTeX snippets that match the quality and style of the provided examples, while following the separate style instructions for spacing and page layout.
