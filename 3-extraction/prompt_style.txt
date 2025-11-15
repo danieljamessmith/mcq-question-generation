@@ -9,7 +9,54 @@
 - Separators between sections (like \hrulefill)
 - No trailing punctionation after math mode. End textual sentances with punctiation but never a line ending like "$...\dfrac{3}{2}.$"
 - Equations that are central to a question should be formatted using display mode e.g. \[ \lvert x-a\rvert + \lvert x-b\rvert = \lvert a-b\rvert \] is preferred 
-  over $\lvert x-a\rvert + \lvert x-b\rvert = \lvert a-b\rvert$ for a question counting the solutions of said equation. 
+  over $\lvert x-a\rvert + \lvert x-b\rvert = \lvert a-b\rvert$ for a question counting the solutions of said equation.
+
+**PAGE LAYOUT STRUCTURE (STRICT - MUST FOLLOW):**
+
+- **RIGID FORMAT:** **ALWAYS exactly 2 questions per page.** No exceptions.
+  
+- **Question placement pattern:**
+  - **Odd-numbered questions (Q1, Q3, Q5, Q7...):** ALWAYS at the TOP of a page
+  - **Even-numbered questions (Q2, Q4, Q6, Q8...):** ALWAYS at the BOTTOM of the same page
+  - Each page break occurs after an even-numbered question
+  
+- **Single `\hrulefill` rule:**
+  - **ONE `\hrulefill` per page** - placed BETWEEN the two questions (middle of page)
+  - **NO `\hrulefill`** at the end of odd-numbered questions
+  - **NO `\hrulefill`** at the end of even-numbered questions
+  - The single `\hrulefill` serves as the visual divider between top and bottom questions
+
+- **Spacing pattern (STRICT):**
+  ```latex
+  \vspace*{15pt}          ← Top margin (after \newpage) - modest increase
+  \item Question N (odd)   ← Top question
+  Content...
+  \\[36-42pt]             ← End of answer choices (increased spacing)
+  \end{tabular}
+  
+  \vfill                  ← Flexible space (expands to fill)
+  \hrulefill              ← ONLY hrulefill on page (auto-centered)
+  \vfill                  ← Flexible space (expands to fill)
+  
+  \item Question N+1 (even) ← Bottom question
+  Content...
+  \\[36-42pt]             ← End of answer choices (increased spacing)
+  \end{tabular}
+  
+  \vspace*{2.5cm}         ← Fixed bottom margin (increased but not excessive)
+  \newpage                ← Page break after even questions
+  ```
+  
+  **Why this works:** Two `\vfill` commands share available vertical space equally, automatically centering the `\hrulefill` between them. The spacing is calibrated to fit 2 questions per page without overflow.
+  
+  **CRITICAL:** Fixed vertical space must not exceed ~6cm total (15pt + 36pt + 36pt + 2.5cm ≈ 5.8cm) to leave room for question content within the ~22cm text height.
+
+- **Within-question spacing:** 
+  - Between prompt and choices: typically `\vspace{0.9cm}` to `\vspace{1.1cm}` (slight increase for better visual separation)
+  - **Between individual choices:** Use `\\[9pt]` to `\\[10pt]` (increased from implicit 6-8pt)
+  - After last choice (before \end{tabular}): Use `\\[36pt]` to `\\[42pt]` (increased from 30-36pt)
+    - Complex questions with many choices or arrays: `\\[42pt]`
+    - Simpler/shorter questions: `\\[36pt]` is sufficient 
 
 **Detect special patterns:**
 - Roman numeral statements (I, II, III) should be formatted as an array environment:
@@ -21,6 +68,22 @@
   \end{array}
   \]
   ```
+- **CRITICAL - Long text in arrays**: If a statement is too long (>80 characters), BREAK IT ACROSS MULTIPLE ROWS rather than using a single `\text{}` command:
+  ```latex
+  \textbf{III:} & \text{Therefore, for every positive integer $n$, the value $n^2+n+41$} \\
+  & \text{cannot be written as a product of two integers greater than $1$}
+  ```
+  NEVER put very long sentences in a single `\text{}` as they will overflow the page. Break at natural phrase boundaries.
+  
+- **Critical spacing notes:**
+  - **Top margin:** `\vspace*{15pt}` after each `\newpage` (modest increase, prevents overflow)
+  - **Between choices:** Use `\\[9-10pt]` between individual options (noticeable increase)
+  - **After odd questions:** End with `\\[36-42pt]` then `\end{tabular}` - NO `\hrulefill`
+  - **Middle of page:** `\vfill` → `\hrulefill` → `\vfill` (auto-centers the separator)
+  - **After even questions:** End with `\\[36-42pt]` then `\end{tabular}` - NO `\hrulefill`
+  - **Bottom margin:** `\vspace*{2.5cm}` provides good spacing without causing page overflow
+  - **Page capacity:** Total fixed spacing (~5.8cm) must leave ~16cm for question content to avoid overflow
+  
 - **Formal statements or definitions** (especially those serving as the target of a negation question) should be formatted using a centered array environment:
   ```latex
   \[
@@ -30,6 +93,24 @@
   \end{array}
   \]
   ```
+  
+- **Display mode for key equations/definitions**:
+  - Equations central to the question should use `\[ \]` display mode
+  - Function definitions in question text should use display mode: `\[f(x) = a^{\cos x} + a^{-\cos x}\]`
+  - Graph equations should use `\[ \]` or `\begin{align*}...\end{align*}` for multiple equations
+  - Statement references like $(\ast)$ should be center-aligned when defining them:
+    ```latex
+    \[\text{statement content here}\tag{$\ast$}\]
+    ```
+    or
+    ```latex
+    \[
+    \begin{array}{c}
+    \text{statement content}
+    \end{array}
+    \tag{$\ast$}
+    \]
+    ```
 - Multi-line prompts with display math should use \[...\] notation
 - Inline math should use $...$ notation
 
@@ -38,22 +119,50 @@
 **FORBIDDEN NOTATIONS - MUST BE REPLACED:**
 - `\land` → Replace with text: "$P$ \textbf{and} $Q$" (bold the word "and")
 - `\lor` → Replace with text: "$P$ \textbf{or} $Q$" (bold the word "or")
-- `\lnot` → Replace with text: "\textbf{not} $P$" (bold the word "not")
+- `\lnot` → USE THIS! For logical negation, `$\lnot P$` is PREFERRED and CORRECT. Do NOT replace this.
 - `\Rightarrow` → Replace with text depending on context:
-  - "$P \Rightarrow Q$" becomes "$P$ is \textbf{sufficient} for $Q$" or "$Q$ \textbf{if} $P$" or "$P$ \textbf{implies} $Q$"
+  - "$P \Rightarrow Q$" becomes "$P$ is \textbf{sufficient} for $Q$" or "$Q$ \textbf{if} $P$" or "\textbf{if} $P$ \textbf{then} $Q$"
+  - NEVER use the word "implies" - it's forbidden. Use "sufficient", "if...then", or other variations.
 - `\Leftarrow` → Replace with text: "$P$ is \textbf{necessary} for $Q$"
-- `\Leftrightarrow` → Replace with text: "\textbf{if and only if}" or "$P$ \textbf{iff} $Q$"
+- `\Leftrightarrow` → Replace with text: "\textbf{if and only if}" (written out fully)
+  - ✓ CORRECT: "\textbf{if and only if}" (this is what you want!)
+  - ✗ FORBIDDEN: "iff" (the abbreviation - replace with full phrase)
 
 **EVEN IF THE INPUT JSON CONTAINS THESE SYMBOLS, YOU MUST REPLACE THEM.**
 
+**CLARIFICATION:** Only replace violations. If input already uses "\textbf{if and only if}" written out, that's perfect - keep it!
+
 **Additional rules:**
-- Logic-technical terms e.g. "necessary", "if ... then ...", "sufficient", "and", "or" should always be \textbf{bolded}.
-- "and" and "or" should only be bolded in logic/necessary/sufficient contexts, not in everyday language.
-- Use textual variations (encouraged for testing comprehension): "P implies Q" = "P is sufficient for Q" = "Q if P" = "Q is necessary for P"
+- FORBIDDEN WORDS: 
+  - "implies" - NEVER use this word. Replace with "if...then", "sufficient", etc.
+  - "iff" (abbreviation) - NEVER use this abbreviation. Replace with "if and only if" written out fully
+  - Note: "if and only if" written out in full is CORRECT and should be kept!
+
+**BOLDING RULES (CRITICAL - APPLY EVERYWHERE):**
+- Logic-technical terms MUST be \textbf{bolded} **EVERYWHERE they appear** (not just in choices/quotes):
+  - "necessary", "sufficient", "if...then", "and" (in logic context), "or" (in logic context), "not" (in logic context)
+- This includes **in the question text itself**: "Which is/are \textbf{sufficient} to guarantee..."
+- This includes **in the answer choices**: "\textbf{necessary} but \textbf{not sufficient}"
+- Exception: "and"/"or" are only bolded when used in a logical/propositional sense, not everyday language
+
+**Examples:**
+- ✓ "Which of these is/are \textbf{sufficient} to guarantee..." (question text)
+- ✓ "individually \textbf{necessary} for $ABCD$..." (question text)  
+- ✓ "\textbf{necessary} but \textbf{not sufficient}" (answer choice)
+- ✗ "sufficient to guarantee" (not bolded - WRONG)
+
+- Use textual variations (encouraged for testing comprehension): "if P then Q" = "P is sufficient for Q" = "Q if P" = "Q is necessary for P"
 
 **OTHER MATHEMATICAL NOTATION**
-- Avoid interval notation like $[1,3]$ or $(\infty, infty)$. Preferred is always inequality notation such as $1 \le x \le $ or "and real $x$" respectively.
+- **Divisibility**: ALWAYS prefer "$n^3-n$ is divisible by $12$" over "$12$ divides $n^3-n$". The "divisible by" phrasing is clearer for students.
+- Avoid interval notation like $[1,3]$ or $(\infty, infty)$. Preferred is always inequality notation such as $1 \le x \le 3$ or "for all real $x$" respectively.
 - Avoid set notation. Instead of writing $x\in\{a,b\}$ write "$x=a$ or $x=b$"
+- **Avoid niche terminology** without definition: Terms like "coincident", "parity" are too advanced. REPLACE with plain language:
+  - **"coincident"** → REPLACE with plain description:
+    - "the circles are not coincident" → "the circles do not have the same center and radius" or "the circles are distinct"
+  - **"parity"** → REPLACE with plain language:
+    - "$a$ and $b$ have the same parity" → "$a$ and $b$ are both even or both odd"
+  - If you see these terms in input JSON, **you MUST replace them** even if they seem correct
 
 
 

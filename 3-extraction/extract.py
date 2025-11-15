@@ -21,6 +21,8 @@ INPUT_FILE = SCRIPT_DIR / "input.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_extract.txt"
 STYLE_PROMPT_FILE = SCRIPT_DIR / "prompt_style.txt"
 EXAMPLES_DIR = SCRIPT_DIR / "examples"
+PREAMBLE_FILE = SCRIPT_DIR / "preamble.tex"
+OUTPUT_RAW_FILE = SCRIPT_DIR / "output_raw.tex"
 OUTPUT_FILE = SCRIPT_DIR / "output.tex"
 
 
@@ -178,10 +180,12 @@ def main():
     else:
         print("No special prompt provided (using default behavior)")
     
-    # Clear output file at the start
+    # Clear output files at the start
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_RAW_FILE, 'w', encoding='utf-8') as f:
+        pass  # Empty the raw file
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        pass  # Empty the file
+        pass  # Empty the final file
     
     print("\nLoading prompts, examples, and input questions...")
     
@@ -200,18 +204,17 @@ def main():
     else:
         print(f"Note: {STYLE_PROMPT_FILE} not found, proceeding without style requirements")
     
-    # Load example .tex files
-    if not EXAMPLES_DIR.exists():
-        print(f"Error: {EXAMPLES_DIR} directory not found")
-        return
-    
-    examples = load_example_tex_files(EXAMPLES_DIR)
-    
-    if not examples:
-        print(f"Error: No example .tex files found in {EXAMPLES_DIR}")
-        return
-    
-    print(f"Loaded {len(examples)} example LaTeX file(s)")
+    # Load example .tex files (if any exist)
+    # Note: Examples are optional - style guide is comprehensive
+    examples = []
+    if EXAMPLES_DIR.exists():
+        examples = load_example_tex_files(EXAMPLES_DIR)
+        if examples:
+            print(f"Loaded {len(examples)} example LaTeX file(s)")
+        else:
+            print(f"Note: No example files found - using comprehensive style guide only")
+    else:
+        print(f"Note: No examples directory found - using comprehensive style guide only")
     
     # Load questions from input.jsonl
     if not INPUT_FILE.exists():
@@ -257,11 +260,42 @@ def main():
         # Combine snippets with blank lines between them
         latex_output = "\n\n".join(latex_snippets)
         
-        # Write to output file
-        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        # Write raw snippets to output_raw.tex
+        with open(OUTPUT_RAW_FILE, "w", encoding="utf-8") as f:
             f.write(latex_output)
         
-        print(f"[OK] Saved {len(latex_snippets)} snippet(s) to {OUTPUT_FILE}")
+        print(f"[OK] Saved {len(latex_snippets)} snippet(s) to {OUTPUT_RAW_FILE}")
+        
+        # Generate full document by injecting into preamble
+        if PREAMBLE_FILE.exists():
+            preamble_content = load_text_file(PREAMBLE_FILE)
+            
+            # Find the injection point (between \begin{enumerate} and \end{enumerate})
+            # Look for the comment marker
+            if "% --- Output.tex goes here ---" in preamble_content:
+                # Replace the comment with the actual content
+                full_document = preamble_content.replace(
+                    "% --- Output.tex goes here ---",
+                    latex_output
+                )
+            else:
+                # Fallback: try to inject between \begin{enumerate} and \end{enumerate}
+                import re
+                pattern = r'(\\begin\{enumerate\})(.*?)(\\end\{enumerate\})'
+                full_document = re.sub(
+                    pattern,
+                    r'\1\n' + latex_output + r'\n\3',
+                    preamble_content,
+                    flags=re.DOTALL
+                )
+            
+            # Write full document to output.tex
+            with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+                f.write(full_document)
+            
+            print(f"[OK] Generated full document at {OUTPUT_FILE}")
+        else:
+            print(f"[WARNING] {PREAMBLE_FILE} not found, only raw output generated")
         
         # Print preview
         print("\n--- Preview (first 800 characters) ---")

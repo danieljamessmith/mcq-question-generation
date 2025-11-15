@@ -18,6 +18,7 @@ def clear_files_and_dirs():
         root_dir / "2-generation" / "gen.jsonl",
         root_dir / "2-generation" / "input.jsonl",
         root_dir / "3-extraction" / "output.tex",
+        root_dir / "3-extraction" / "output_raw.tex",
         root_dir / "3-extraction" / "input.jsonl",
     ]
     

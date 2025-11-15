@@ -1,14 +1,19 @@
 # Ignore project data directory
 /data/
+/3-extraction/examples
+comments.txt
 
 # Ignore img directory in 1-transcription
 /1-transcription/img/
-
 /1-transcription/output.jsonl
+
 /2-generation/gen.json
 /2-generation/input.jsonl
-/2-generation/gen.jsonl
-/3-extraction/output.tex
-/3-extraction/input.jsonl
 
+/2-generation/gen.jsonl
+/3-extraction/input.jsonl
+/3-extraction/output.tex
+/3-extraction/output_raw.tex
+
+# Python environment
 .venv/
