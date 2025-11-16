@@ -28,49 +28,40 @@ You will receive:
 
 **CRITICAL: You MUST generate INDIVIDUAL LaTeX SNIPPETS for each question, NOT a complete compilable document!**
 
-3. **Key structural rules:**
-   - Each snippet should be self-contained
-   - NO `\documentclass`, `\usepackage`, preamble, `\begin{document}`, or `\end{document}`
+**Key structural rules:**
+- Each snippet should be self-contained
+- NO `\documentclass`, `\usepackage`, preamble, `\begin{document}`, or `\end{document}`
+- NO page layout elements (`\hrulefill`, `\vfill`, `\vspace`, `\newpage`) between questions
 
-4. **Individual question format:**
-   - Start with a delimiter comment: `% ===== QUESTION [N] =====`
-   - Include answer key comment: `% Answer: [answer_key index] (Letter: [A/B/C/...])`
-   - Format the question as a LaTeX `\item` block
-   - End with a delimiter comment: `% ===== END QUESTION [N] =====`
-   - Add blank lines between snippets for readability
+**Individual question format:**
+- Start with a delimiter comment: `% ===== QUESTION [N] =====`
+- Include answer key comment: `% Answer: [answer_key index] (Letter: [A/B/C/...])`
+- Format the question as a LaTeX `\item` block
+- End with a delimiter comment: `% ===== END QUESTION [N] =====`
 
-5. **Handle LaTeX escaping properly:**
-   - Convert \$ to $ for proper LaTeX math mode
-   - Convert \\ to \ for LaTeX commands
-   - Preserve math notation correctly
+**Handle LaTeX escaping properly:**
+- Convert \$ to $ for proper LaTeX math mode
+- Convert \\ to \ for LaTeX commands
+- Preserve math notation correctly
 
-6. **Output format:** Return a JSON object with a "latex_snippets" array.
+**Output format:** Return a JSON object with a "latex_snippets" array containing ONLY question snippets.
    
-   **IMPORTANT:** The array should contain all elements in sequence so that joining them with "\n\n" produces the final document. It may contain:
-   - Question snippets (with comments, \item blocks, content, and choice tabular environments)
-   - Additional LaTeX snippets (such as separators or page breaks) needed so that the assembled document respects the layout defined in the style instructions
-   
-   Example structure (abstract):
-   {
-     "latex_snippets": [
-       "Question 1 snippet...",
-       "Separator snippet...",
-       "Question 2 snippet...",
-       "Page-break snippet...",
-       "Question 3 snippet...",
-       "Separator snippet...",
-       "Question 4 snippet..."
-     ]
-   }
+Example structure:
+{
+  "latex_snippets": [
+    "% ===== QUESTION 1 =====\n% Answer: 0 (Letter: A)\n\\item\n...\n% ===== END QUESTION 1 =====",
+    "% ===== QUESTION 2 =====\n% Answer: 2 (Letter: C)\n\\item\n...\n% ===== END QUESTION 2 =====",
+    "% ===== QUESTION 3 =====\n% Answer: 1 (Letter: B)\n\\item\n...\n% ===== END QUESTION 3 ====="
+  ]
+}
 
 **IMPORTANT NOTES:**
-- Output should be SNIPPETS ONLY, no document structure
-- The "latex_snippets" array may contain both question snippets and structural elements (such as separators and page-break snippets)
-- Question snippets are delimited by clear LaTeX comment markers (% ===== QUESTION N =====)
+- Output ONLY question snippets, no structural/spacing elements
+- Each snippet is self-contained and properly formatted
+- Question snippets are delimited by clear LaTeX comment markers
 - Include answer keys as LaTeX comments for grading
 - Maintain consistent styling across all snippets
 - Ensure proper LaTeX syntax within snippets
 - Preserve all mathematical notation exactly as it appears in the JSON (after unescaping)
-- The array will be joined with "\n\n" to create the final document
 
-Generate clean, professional LaTeX snippets that match the quality and style of the provided examples, while following the separate style instructions for spacing and page layout.
+Generate clean, professional LaTeX snippets that match the quality and style of the provided examples.
