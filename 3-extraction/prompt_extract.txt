@@ -31,7 +31,8 @@ You will receive:
 **Key structural rules:**
 - Each snippet should be self-contained
 - NO `\documentclass`, `\usepackage`, preamble, `\begin{document}`, or `\end{document}`
-- NO page layout elements (`\hrulefill`, `\vfill`, `\vspace`, `\newpage`) between questions
+- NO page layout elements (`\hrulefill`, `\vfill`, `\vspace`, `\vspace*`, `\newpage`) AT ALL - not between questions, not within questions, not anywhere
+- Page layout and spacing will be handled by a separate compilation step
 
 **Individual question format:**
 - Start with a delimiter comment: `% ===== QUESTION [N] =====`
@@ -63,5 +64,6 @@ Example structure:
 - Maintain consistent styling across all snippets
 - Ensure proper LaTeX syntax within snippets
 - Preserve all mathematical notation exactly as it appears in the JSON (after unescaping)
+- CRITICAL: Do NOT include ANY spacing commands (\vfill, \hrulefill, \vspace, \vspace*, \newpage) in the output
 
 Generate clean, professional LaTeX snippets that match the quality and style of the provided examples.

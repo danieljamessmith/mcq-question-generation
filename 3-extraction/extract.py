@@ -21,9 +21,7 @@ INPUT_FILE = SCRIPT_DIR / "input.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_extract.txt"
 STYLE_PROMPT_FILE = SCRIPT_DIR / "prompt_style.txt"
 EXAMPLES_DIR = SCRIPT_DIR / "examples"
-PREAMBLE_FILE = SCRIPT_DIR / "preamble.tex"
 OUTPUT_RAW_FILE = SCRIPT_DIR / "output_raw.tex"
-OUTPUT_FILE = SCRIPT_DIR / "output.tex"
 
 
 def load_text_file(file_path):
@@ -117,13 +115,16 @@ def extract_latex_from_json(questions, prompt_text, style_prompt_text, examples,
 
 IMPORTANT: Generate INDIVIDUAL LaTeX SNIPPETS for each question. DO NOT include:
 - Document structure: \\documentclass, \\usepackage, preamble, \\begin{{document}}/\\end{{document}}
-- Page layout elements: \\hrulefill, \\vfill, \\vspace, \\newpage
+- Page layout elements: \\hrulefill, \\vfill, \\vspace, \\vspace*, \\newpage (NONE of these should appear)
 
 Each snippet should:
 1. Start with: % ===== QUESTION [N] =====
 2. Include answer key comment: % Answer: [index] (Letter: [A/B/C/...])
-3. Contain the formatted question content (\\item block with choices)
+3. Contain ONLY the formatted question content (\\item block with choices)
 4. End with: % ===== END QUESTION [N] =====
+
+CRITICAL: Each question snippet should be PURE content with NO spacing commands.
+Page layout and spacing between questions will be added in a separate compilation step.
 
 The output should be an array of independent, self-contained question snippets only.
 """
@@ -131,7 +132,8 @@ The output should be an array of independent, self-contained question snippets o
     print("\n--- Starting LaTeX Snippet Extraction ---")
     print(f"Using {len(examples)} example file(s) as style reference")
     print(f"Converting {len(questions)} question(s) to individual LaTeX snippets")
-    print(f"Note: Snippets will NOT include page layout elements (\\hrulefill, \\vspace, etc.)")
+    print(f"Note: Snippets will NOT include ANY spacing/layout commands")
+    print(f"      (No \\hrulefill, \\vfill, \\vspace, \\newpage in output)")
     if special_prompt.strip():
         print(f"Special prompt: '{special_prompt}'")
     print("Sending request to OpenAI API...")
@@ -188,12 +190,10 @@ def main():
     else:
         print("No special prompt provided (using default behavior)")
     
-    # Clear output files at the start
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    # Clear output file at the start
+    OUTPUT_RAW_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_RAW_FILE, 'w', encoding='utf-8') as f:
         pass  # Empty the raw file
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        pass  # Empty the final file
     
     print("\nLoading prompts, examples, and input questions...")
     
@@ -273,38 +273,7 @@ def main():
             f.write(latex_output)
         
         print(f"[OK] Saved {len(latex_snippets)} snippet(s) to {OUTPUT_RAW_FILE}")
-        
-        # Generate full document by injecting snippets into preamble
-        # Note: Page layout/spacing must be added manually or via a separate compilation step
-        if PREAMBLE_FILE.exists():
-            preamble_content = load_text_file(PREAMBLE_FILE)
-            
-            # Find the injection point (between \begin{enumerate} and \end{enumerate})
-            # Look for the comment marker
-            if "% --- Output.tex goes here ---" in preamble_content:
-                # Replace the comment with the actual content
-                full_document = preamble_content.replace(
-                    "% --- Output.tex goes here ---",
-                    latex_output
-                )
-            else:
-                # Fallback: try to inject between \begin{enumerate} and \end{enumerate}
-                import re
-                pattern = r'(\\begin\{enumerate\})(.*?)(\\end\{enumerate\})'
-                full_document = re.sub(
-                    pattern,
-                    r'\1\n' + latex_output + r'\n\3',
-                    preamble_content,
-                    flags=re.DOTALL
-                )
-            
-            # Write full document to output.tex
-            with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-                f.write(full_document)
-            
-            print(f"[OK] Generated full document at {OUTPUT_FILE}")
-        else:
-            print(f"[WARNING] {PREAMBLE_FILE} not found, only raw output generated")
+        print(f"[INFO] Use 4-production/compile.py to generate the full document")
         
         # Print preview
         print("\n--- Preview (first 800 characters) ---")
