@@ -2,8 +2,17 @@
 4-production/compile.py
 
 Compiles a full LaTeX document from structured question snippets.
-Takes structured input from layer 3 (output_raw.tex with delimited questions)
-and produces a complete compilable document with proper spacing.
+
+INPUT FORMAT (input.tex):
+    Questions delimited by LaTeX comments:
+    
+    % ===== QUESTION N =====
+    % Answer: [index] (Letter: [A/B/C/...])
+    \\item
+    Question content...
+    % ===== END QUESTION N =====
+    
+    (Repeat for each question)
 
 Usage:
     python compile.py <num_questions> [input_file] [output_file]
@@ -11,15 +20,15 @@ Usage:
 Arguments:
     num_questions: Number of questions to include in document
     input_file: (optional) Path to input file with question snippets 
-                Default: ../3-extraction/output_raw.tex
+                Default: input.tex
     output_file: (optional) Path to output document
                  Default: output.tex
                  
 Document layout:
     - 2 questions per page
-    - Between odd and even (Q1→Q2): \vfill \hrulefill \vfill
-    - Between even and odd (Q2→Q3): \vspace{20pt} \newpage \vspace*{20pt}
-    - Start document with: \vspace*{15pt}
+    - Between odd and even (Q1→Q2): \\vfill \\hrulefill \\vfill
+    - Between even and odd (Q2→Q3): \\vspace{20pt} \\newpage \\vspace*{20pt}
+    - Start document with: \\vspace*{15pt}
 """
 
 import sys
@@ -163,9 +172,16 @@ def main():
         print("Arguments:")
         print("  num_questions: Number of questions to include")
         print("  input_file:    (optional) Path to input file")
-        print("                 Default: ../3-extraction/output_raw.tex")
+        print("                 Default: input.tex")
         print("  output_file:   (optional) Path to output file")
         print("                 Default: output.tex")
+        print()
+        print("Input format: Questions delimited by LaTeX comments")
+        print("  % ===== QUESTION N =====")
+        print("  % Answer: [index] (Letter: [A/B/C/...])")
+        print("  \\item")
+        print("  Question content...")
+        print("  % ===== END QUESTION N =====")
         sys.exit(1)
     
     # Get number of questions
@@ -179,11 +195,11 @@ def main():
         print(f"Error: Number of questions must be positive: {num_questions}")
         sys.exit(1)
     
-    # Get input file path (default to layer 3 output)
+    # Get input file path (default to local input.tex)
     if len(sys.argv) >= 3:
         input_file = Path(sys.argv[2])
     else:
-        input_file = SCRIPT_DIR.parent / "3-extraction" / "output_raw.tex"
+        input_file = SCRIPT_DIR / "input.tex"
     
     # Get output file path
     if len(sys.argv) >= 4:
