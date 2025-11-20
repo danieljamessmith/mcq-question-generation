@@ -3,8 +3,8 @@
 /3-extraction/examples
 comments.txt
 
-# Ignore img directory in 1-transcription
-/1-transcription/img/
+# Ignore contents of img directory in 1-transcription (but keep the directory)
+/1-transcription/img/*
 /1-transcription/output.jsonl
 
 /2-generation/gen.json
