@@ -138,13 +138,14 @@ The output should be an array of independent, self-contained question snippets o
     
     # Call OpenAI API
     response = client.chat.completions.create(
-        model="gpt-5",
+        model="gpt-5.1",
         messages=[
             {
                 "role": "user",
                 "content": full_prompt
             }
         ],
+        reasoning_effort="medium",
         max_completion_tokens=20000,
         response_format={"type": "json_object"},
     )

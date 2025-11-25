@@ -60,7 +60,7 @@ def transcribe_image(image_path, prompt_text, template_text, special_prompt="", 
     
     # Call OpenAI Vision API with GPT-5
     response = client.chat.completions.create(
-        model="gpt-5",
+        model="gpt-5.1",
         messages=[
             {
                 "role": "user",
@@ -78,7 +78,8 @@ def transcribe_image(image_path, prompt_text, template_text, special_prompt="", 
                 ]
             }
         ],
-        max_completion_tokens=5000,  # Increased for complex transcriptions
+        reasoning_effort="medium",
+        max_completion_tokens=5000,  
         response_format={"type": "json_object"},
     )
     

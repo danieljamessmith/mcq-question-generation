@@ -130,13 +130,14 @@ def validate_question(question, critic_prompt_text, level_prompt_text):
     
     # Call OpenAI API
     response = client.chat.completions.create(
-        model="gpt-5",
+        model="gpt-5.1",
         messages=[
             {
                 "role": "user",
                 "content": full_prompt
             }
         ],
+        reasoning_effort="high",
         max_completion_tokens=10000,  # Increased to allow for reasoning tokens + response
         response_format={"type": "json_object"},
     )
