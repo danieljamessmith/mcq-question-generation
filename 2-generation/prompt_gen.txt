@@ -14,7 +14,7 @@ Each generated question MUST include:
 - "id": null (will be assigned later)
 - "exam": null (will be assigned later)
 - "year": null (will be assigned later)
-- "difficulty": an integer from 3 to 5
+- "difficulty": an integer from 1 to 5
 - "answer_key": the index (0-based) of the correct answer choice
 - "topics": an array of 1-5 relevant topic strings
 - "prompt": the question text with properly escaped LaTeX

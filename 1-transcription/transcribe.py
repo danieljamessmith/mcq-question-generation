@@ -128,8 +128,8 @@ def main():
     prompt_text = load_text_file(PROMPT_FILE)
     template_text = load_text_file(TEMPLATE_FILE)
     
-    # Get all PNG images (sorted alphabetically as Windows Explorer shows)
-    png_files = sorted(IMG_DIR.glob("*.png"))
+    # Get all PNG images (sorted by creation date, oldest first)
+    png_files = sorted(IMG_DIR.glob("*.png"), key=lambda x: x.stat().st_ctime)
     
     if not png_files:
         print(f"No PNG files found in {IMG_DIR}")
