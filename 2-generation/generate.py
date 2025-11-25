@@ -21,8 +21,12 @@ INPUT_FILE = SCRIPT_DIR / "input.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_gen.txt"
 CRITIC_PROMPT_FILE = SCRIPT_DIR / "prompt_critic.txt"
 LEVEL_PROMPT_FILE = SCRIPT_DIR / "prompt_level.txt"
+SPEC_FILE = SCRIPT_DIR / "tmua_spec.txt"
 OUTPUT_JSON = SCRIPT_DIR / "gen.json"
 OUTPUT_JSONL = SCRIPT_DIR / "gen.jsonl"
+
+# Keys we never want to preserve in generated output if they carry no data
+UNWANTED_METADATA_KEYS = {"exam", "year"}
 
 
 def load_text_file(file_path):
@@ -48,7 +52,7 @@ def load_examples(input_file):
     return examples
 
 
-def generate_questions(examples, prompt_text, level_prompt_text, special_prompt=""):
+def generate_questions(examples, prompt_text, level_prompt_text, spec_text="", special_prompt=""):
     """Generate novel questions using OpenAI API."""
     # Start timing
     start_time = time.time()
@@ -71,8 +75,14 @@ def generate_questions(examples, prompt_text, level_prompt_text, special_prompt=
     else:
         special_prompt_text = ""
     
+    # Inject spec reference if provided
+    if spec_text.strip():
+        spec_section = f"\n\n**TMUA Content Specification (topics and knowledge requirements):**\n{spec_text}"
+    else:
+        spec_section = ""
+    
     # Construct the full prompt
-    full_prompt = f"{prompt_text}{level_prompt_section}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}"
+    full_prompt = f"{prompt_text}{level_prompt_section}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}"
     
     print("\n--- Starting Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
@@ -111,7 +121,7 @@ def generate_questions(examples, prompt_text, level_prompt_text, special_prompt=
     return result, input_tokens, output_tokens
 
 
-def validate_question(question, critic_prompt_text, level_prompt_text):
+def validate_question(question, critic_prompt_text, level_prompt_text, spec_text=""):
     """Validate a question using the critic prompt."""
     # Start timing
     start_time = time.time()
@@ -125,8 +135,14 @@ def validate_question(question, critic_prompt_text, level_prompt_text):
     else:
         level_prompt_section = ""
     
+    # Inject spec reference if provided
+    if spec_text.strip():
+        spec_section = f"\n\n**TMUA Content Specification (for level-appropriateness check):**\n{spec_text}"
+    else:
+        spec_section = ""
+    
     # Construct the full prompt
-    full_prompt = f"{critic_prompt_text}{level_prompt_section}\n\nQuestion to evaluate:\n\n{question_text}"
+    full_prompt = f"{critic_prompt_text}{level_prompt_section}\n\nQuestion to evaluate:\n\n{question_text}{spec_section}"
     
     # Call OpenAI API
     response = client.chat.completions.create(
@@ -216,6 +232,15 @@ def main():
     else:
         print(f"Note: {LEVEL_PROMPT_FILE} not found, proceeding without level restrictions")
     
+    # Load TMUA spec (optional but recommended)
+    spec_text = ""
+    if SPEC_FILE.exists():
+        spec_text = load_text_file(SPEC_FILE)
+        if spec_text.strip():
+            print(f"Loaded TMUA content specification from {SPEC_FILE}")
+    else:
+        print(f"Note: {SPEC_FILE} not found, proceeding without spec reference")
+    
     # Load examples from input.jsonl
     if not INPUT_FILE.exists():
         print(f"Error: {INPUT_FILE} not found")
@@ -231,7 +256,7 @@ def main():
     
     # Generate questions
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, level_prompt_text, special_prompt)
+        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, level_prompt_text, spec_text, special_prompt)
         
         # Track token usage
         total_input_tokens += input_tokens
@@ -247,6 +272,15 @@ def main():
             return
         
         generated_questions = response_obj["questions"]
+
+        # Strip unwanted metadata (e.g., null exam/year) before further processing
+        for question in generated_questions:
+            for key in list(question.keys()):
+                if (
+                    key in UNWANTED_METADATA_KEYS
+                    and question.get(key) is None
+                ):
+                    question.pop(key, None)
         print(f"\n[OK] Successfully generated {len(generated_questions)} question(s)")
         
         # Add 'valid' field as the first key in each question
@@ -277,7 +311,7 @@ def main():
                 time.sleep(1)
             
             try:
-                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text, level_prompt_text)
+                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text, level_prompt_text, spec_text)
                 
                 # Track token usage
                 total_input_tokens += input_tokens
@@ -285,11 +319,13 @@ def main():
                 
                 well_posed = evaluation.get("well_posed", False)
                 answer_correct = evaluation.get("answer_correct", False)
+                level_appropriate = evaluation.get("level_appropriate", True)  # Default True for backwards compat
                 overall_pass = evaluation.get("overall_pass", False)
                 reasoning = evaluation.get("reasoning", "No reasoning provided")
                 
                 print(f"  Well-posed: {well_posed}")
                 print(f"  Answer correct: {answer_correct}")
+                print(f"  Level appropriate: {level_appropriate}")
                 print(f"  Overall: {'[PASSED]' if overall_pass else '[FAILED]'}")
                 
                 # Update the valid field

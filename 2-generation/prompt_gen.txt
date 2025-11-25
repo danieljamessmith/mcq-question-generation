@@ -3,6 +3,7 @@ You are an expert exam question generator specializing in creating high-quality,
 Given example questions below, generate between 2 and 5 NEW questions that:
 
 1. Are NOVEL - do not copy or slightly modify the examples. Create genuinely new questions.
+   *CRITICALLY* small pertubations of the given examples are NOT encouraged. Your aim is to generate novel, interesting, unseen questions. 
 2. Follow the same format and style as the examples.
 3. Cover similar or related topics, but explore different aspects or scenarios.
 4. Use proper LaTeX formatting for all mathematical expressions:

@@ -1,10 +1,12 @@
 === LEVEL INSTRUCTIONS ===
 ---
-Questions should be level-appropriate for an advanced high-school student but are strictly LOWER level than undergraduate level. 
+Questions should be level-appropriate for an advanced high-school student but are strictly LOWER level than undergraduate level.
+The TMUA Content Specification (appended at the end of this prompt) defines the exact scope of mathematical knowledge that can be assumed.
 ---
 So, in particular, no direct knowledge of:
 [Real Analysis, Abstract Algebra, Modular Arithmetic, etc] should be required. 
-Questions that *indirectly* touch on such topics without e.g. the specific notations are fine. 
+Questions that *indirectly* touch on such topics without e.g. the specific notations are fine.
+Off-spec topics ARE ALLOWED if and only if all required terms/concepts are explicitly defined within the question body itself.
 ---
 
 **MATHEMATICAL NOTATION RULES:**
