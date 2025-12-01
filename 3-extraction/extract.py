@@ -17,7 +17,7 @@ OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-INPUT_FILE = SCRIPT_DIR / "input.jsonl"
+INPUT_FILE = SCRIPT_DIR / "input_extract.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_extract.txt"
 STYLE_PROMPT_FILE = SCRIPT_DIR / "prompt_style.txt"
 EXAMPLES_DIR = SCRIPT_DIR / "examples"

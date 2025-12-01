@@ -17,10 +17,9 @@ OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-INPUT_FILE = SCRIPT_DIR / "input.jsonl"
+INPUT_FILE = SCRIPT_DIR / "input_gen.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_gen.txt"
 CRITIC_PROMPT_FILE = SCRIPT_DIR / "prompt_critic.txt"
-LEVEL_PROMPT_FILE = SCRIPT_DIR / "prompt_level.txt"
 SPEC_FILE = SCRIPT_DIR / "tmua_spec.txt"
 OUTPUT_JSON = SCRIPT_DIR / "gen.json"
 OUTPUT_JSONL = SCRIPT_DIR / "gen.jsonl"
@@ -52,7 +51,7 @@ def load_examples(input_file):
     return examples
 
 
-def generate_questions(examples, prompt_text, level_prompt_text, spec_text="", special_prompt=""):
+def generate_questions(examples, prompt_text, spec_text="", special_prompt=""):
     """Generate novel questions using OpenAI API."""
     # Start timing
     start_time = time.time()
@@ -62,12 +61,6 @@ def generate_questions(examples, prompt_text, level_prompt_text, spec_text="", s
         f"Example {i+1}:\n{json.dumps(example, indent=2, ensure_ascii=False)}"
         for i, example in enumerate(examples)
     ])
-    
-    # Inject level prompt if provided
-    if level_prompt_text.strip():
-        level_prompt_section = f"\n\n**Level Requirements:**\n{level_prompt_text}"
-    else:
-        level_prompt_section = ""
     
     # Inject special prompt if provided
     if special_prompt.strip():
@@ -82,7 +75,7 @@ def generate_questions(examples, prompt_text, level_prompt_text, spec_text="", s
         spec_section = ""
     
     # Construct the full prompt
-    full_prompt = f"{prompt_text}{level_prompt_section}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}"
+    full_prompt = f"{prompt_text}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}"
     
     print("\n--- Starting Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
@@ -123,19 +116,13 @@ def generate_questions(examples, prompt_text, level_prompt_text, spec_text="", s
     return result, input_tokens, output_tokens
 
 
-def validate_question(question, critic_prompt_text, level_prompt_text, spec_text=""):
+def validate_question(question, critic_prompt_text, spec_text=""):
     """Validate a question using the critic prompt."""
     # Start timing
     start_time = time.time()
     
     # Format the question for validation
     question_text = json.dumps(question, indent=2, ensure_ascii=False)
-    
-    # Inject level prompt if provided
-    if level_prompt_text.strip():
-        level_prompt_section = f"\n\n**Level Requirements to Check:**\n{level_prompt_text}"
-    else:
-        level_prompt_section = ""
     
     # Inject spec reference if provided
     if spec_text.strip():
@@ -144,7 +131,7 @@ def validate_question(question, critic_prompt_text, level_prompt_text, spec_text
         spec_section = ""
     
     # Construct the full prompt
-    full_prompt = f"{critic_prompt_text}{level_prompt_section}\n\nQuestion to evaluate:\n\n{question_text}{spec_section}"
+    full_prompt = f"{critic_prompt_text}\n\nQuestion to evaluate:\n\n{question_text}{spec_section}"
     
     # Call OpenAI API
     response = client.chat.completions.create(
@@ -225,15 +212,6 @@ def main():
         return
     critic_prompt_text = load_text_file(CRITIC_PROMPT_FILE)
     
-    # Load level prompt (optional)
-    level_prompt_text = ""
-    if LEVEL_PROMPT_FILE.exists():
-        level_prompt_text = load_text_file(LEVEL_PROMPT_FILE)
-        if level_prompt_text.strip():
-            print(f"Loaded level requirements from {LEVEL_PROMPT_FILE}")
-    else:
-        print(f"Note: {LEVEL_PROMPT_FILE} not found, proceeding without level restrictions")
-    
     # Load TMUA spec (optional but recommended)
     spec_text = ""
     if SPEC_FILE.exists():
@@ -258,7 +236,7 @@ def main():
     
     # Generate questions
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, level_prompt_text, spec_text, special_prompt)
+        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text, special_prompt)
         
         # Track token usage
         total_input_tokens += input_tokens
@@ -313,7 +291,7 @@ def main():
                 time.sleep(1)
             
             try:
-                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text, level_prompt_text, spec_text)
+                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text, spec_text)
                 
                 # Track token usage
                 total_input_tokens += input_tokens
