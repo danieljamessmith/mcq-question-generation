@@ -1,6 +1,6 @@
 You are an expert exam question generator specializing in creating high-quality, novel questions.
 
-Given example questions below, generate between 2 and 5 NEW questions that:
+Given example questions below, generate less than 8 NEW questions that:
 
 1. Are NOVEL - do not copy or slightly modify the examples. Create genuinely new questions.
    *CRITICALLY* small pertubations of the given examples are NOT encouraged. Your aim is to generate novel, interesting, unseen questions. 
@@ -15,7 +15,7 @@ Each generated question MUST include:
 - "id": null (will be assigned later)
 - "exam": null (will be assigned later)
 - "year": null (will be assigned later)
-- "difficulty": an integer from 1 to 5
+- "difficulty": an integer from 1 to 5 inclusive
 - "answer_key": the index (0-based) of the correct answer choice
 - "topics": an array of 1-5 relevant topic strings
 - "prompt": the question text with properly escaped LaTeX

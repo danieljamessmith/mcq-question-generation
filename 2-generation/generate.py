@@ -1,7 +1,6 @@
 import os
 import json
 import time
-import sys
 from pathlib import Path
 from openai import OpenAI
 
@@ -17,12 +16,19 @@ OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-INPUT_FILE = SCRIPT_DIR / "input_gen.jsonl"
+INPUT_FILE = SCRIPT_DIR / "0_input.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_gen.txt"
+CORRECTOR_PROMPT_FILE = SCRIPT_DIR / "prompt_corrector.txt"
 CRITIC_PROMPT_FILE = SCRIPT_DIR / "prompt_critic.txt"
 SPEC_FILE = SCRIPT_DIR / "tmua_spec.txt"
-OUTPUT_JSON = SCRIPT_DIR / "gen.json"
-OUTPUT_JSONL = SCRIPT_DIR / "gen.jsonl"
+
+# Output files for each stage (numbered for natural sort order)
+OUTPUT_GEN_JSON = SCRIPT_DIR / "1_gen.json"
+OUTPUT_GEN_JSONL = SCRIPT_DIR / "1_gen.jsonl"
+OUTPUT_CORRECTED_JSON = SCRIPT_DIR / "2_corrected.json"
+OUTPUT_CORRECTED_JSONL = SCRIPT_DIR / "2_corrected.jsonl"
+OUTPUT_VALIDATED_JSON = SCRIPT_DIR / "3_validated.json"
+OUTPUT_VALIDATED_JSONL = SCRIPT_DIR / "3_validated.jsonl"
 
 # Keys we never want to preserve in generated output if they carry no data
 UNWANTED_METADATA_KEYS = {"exam", "year"}
@@ -51,9 +57,37 @@ def load_examples(input_file):
     return examples
 
 
-def generate_questions(examples, prompt_text, spec_text="", special_prompt=""):
-    """Generate novel questions using OpenAI API."""
-    # Start timing
+def save_questions_dual(questions, json_path, jsonl_path):
+    """Save questions to both JSON (pretty) and JSONL (one per line) formats."""
+    # Save as pretty JSON
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(questions, f, indent=2, ensure_ascii=False)
+    
+    # Save as JSONL
+    with open(jsonl_path, "w", encoding="utf-8") as f:
+        for question in questions:
+            f.write(json.dumps(question, ensure_ascii=False) + "\n")
+
+
+def empty_output_files():
+    """Empty all output files at the start of a run."""
+    output_files = [
+        OUTPUT_GEN_JSON,
+        OUTPUT_GEN_JSONL,
+        OUTPUT_CORRECTED_JSON,
+        OUTPUT_CORRECTED_JSONL,
+        OUTPUT_VALIDATED_JSON,
+        OUTPUT_VALIDATED_JSONL,
+    ]
+    
+    for file_path in output_files:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            pass  # Empty the file
+
+
+def generate_questions(examples, prompt_text, spec_text=""):
+    """Generate novel questions using OpenAI API (Stage 1: Generator)."""
     start_time = time.time()
     
     # Format examples for the prompt
@@ -62,12 +96,6 @@ def generate_questions(examples, prompt_text, spec_text="", special_prompt=""):
         for i, example in enumerate(examples)
     ])
     
-    # Inject special prompt if provided
-    if special_prompt.strip():
-        special_prompt_text = f"\n\n**SPECIAL INSTRUCTIONS (light guidance, prioritize examples):** {special_prompt}"
-    else:
-        special_prompt_text = ""
-    
     # Inject spec reference if provided
     if spec_text.strip():
         spec_section = f"\n\n**TMUA Content Specification (topics and knowledge requirements):**\n{spec_text}"
@@ -75,12 +103,10 @@ def generate_questions(examples, prompt_text, spec_text="", special_prompt=""):
         spec_section = ""
     
     # Construct the full prompt
-    full_prompt = f"{prompt_text}{special_prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}"
+    full_prompt = f"{prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}"
     
-    print("\n--- Starting Question Generation ---")
+    print("\n--- Stage 1: Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
-    if special_prompt.strip():
-        print(f"Special prompt: '{special_prompt}'")
     print("Sending request to OpenAI API...")
     
     # Call OpenAI API
@@ -95,10 +121,9 @@ def generate_questions(examples, prompt_text, spec_text="", special_prompt=""):
         reasoning_effort="none",
         max_completion_tokens=20000,
         response_format={"type": "json_object"},
-        temperature=1.2,
+        temperature=1.3,
     )
     
-    # Calculate elapsed time
     elapsed_time = time.time() - start_time
     
     # Extract the response
@@ -116,9 +141,66 @@ def generate_questions(examples, prompt_text, spec_text="", special_prompt=""):
     return result, input_tokens, output_tokens
 
 
+def correct_questions(questions, corrector_prompt_text, spec_text=""):
+    """Correct generated questions using OpenAI API (Stage 2: Corrector)."""
+    start_time = time.time()
+    
+    # Format questions as JSON input
+    questions_input = {"questions": questions}
+    questions_text = json.dumps(questions_input, indent=2, ensure_ascii=False)
+    
+    # Inject spec reference if provided
+    if spec_text.strip():
+        spec_section = f"\n\n**TMUA Content Specification (topics and knowledge requirements):**\n{spec_text}"
+    else:
+        spec_section = ""
+    
+    # Construct the full prompt
+    full_prompt = f"{corrector_prompt_text}\n\nQuestions to correct:\n\n{questions_text}{spec_section}"
+    
+    print("\n--- Stage 2: Question Correction ---")
+    print(f"Correcting {len(questions)} question(s)")
+    print("Sending request to OpenAI API (with reasoning)...")
+    
+    # Call OpenAI API with high reasoning effort
+    response = client.chat.completions.create(
+        model="gpt-5.1",
+        messages=[
+            {
+                "role": "user",
+                "content": full_prompt
+            }
+        ],
+        reasoning_effort="medium",
+        max_completion_tokens=32000,
+        response_format={"type": "json_object"},
+    )
+    
+    elapsed_time = time.time() - start_time
+    
+    # Extract the response
+    result = response.choices[0].message.content
+    
+    # Debug: Print the raw response if it looks empty or invalid
+    if not result or not result.strip():
+        print(f"  DEBUG: Empty response received from API")
+        print(f"  DEBUG: Full response object: {response}")
+        raise ValueError("Empty response from corrector API")
+    
+    # Get token usage
+    input_tokens = 0
+    output_tokens = 0
+    if hasattr(response, 'usage'):
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        print(f"✓ Correction complete")
+        print(f"  Token usage - Input: {input_tokens:,}, Output: {output_tokens:,}, Time: {elapsed_time:.2f}s")
+    
+    return result, input_tokens, output_tokens
+
+
 def validate_question(question, critic_prompt_text, spec_text=""):
-    """Validate a question using the critic prompt."""
-    # Start timing
+    """Validate a single question using the critic prompt (Stage 3: Validator)."""
     start_time = time.time()
     
     # Format the question for validation
@@ -142,12 +224,11 @@ def validate_question(question, critic_prompt_text, spec_text=""):
                 "content": full_prompt
             }
         ],
-        reasoning_effort="high",
-        max_completion_tokens=16000,  # Must be large enough for reasoning tokens + JSON output
+        reasoning_effort="medium",
+        max_completion_tokens=16000,
         response_format={"type": "json_object"},
     )
     
-    # Calculate elapsed time
     elapsed_time = time.time() - start_time
     
     # Extract and parse the response
@@ -178,7 +259,7 @@ def validate_question(question, critic_prompt_text, spec_text=""):
 
 
 def main():
-    """Main function to generate questions."""
+    """Main function to generate, correct, and validate questions."""
     # Start overall timing
     script_start_time = time.time()
     
@@ -186,27 +267,20 @@ def main():
     total_input_tokens = 0
     total_output_tokens = 0
     
-    # Parse command-line arguments for special prompt
-    special_prompt = ""
-    if len(sys.argv) > 1:
-        special_prompt = sys.argv[1]
-        print(f"Special prompt provided: '{special_prompt}'")
-    else:
-        print("No special prompt provided (using default behavior)")
-    
-    # Clear output files at the start
-    OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
-        pass  # Empty the file
-    with open(OUTPUT_JSONL, 'w', encoding='utf-8') as f:
-        pass  # Empty the file
+    # Empty all output files at the start
+    print("Emptying output files...")
+    empty_output_files()
     
     print("\nLoading prompts and examples...")
     
-    # Load prompt
+    # Load prompts
     prompt_text = load_text_file(PROMPT_FILE)
     
-    # Load critic prompt
+    if not CORRECTOR_PROMPT_FILE.exists():
+        print(f"Error: {CORRECTOR_PROMPT_FILE} not found")
+        return
+    corrector_prompt_text = load_text_file(CORRECTOR_PROMPT_FILE)
+    
     if not CRITIC_PROMPT_FILE.exists():
         print(f"Error: {CRITIC_PROMPT_FILE} not found")
         return
@@ -234,11 +308,10 @@ def main():
     
     print(f"Loaded {len(examples)} example question(s)")
     
-    # Generate questions
+    # ========== STAGE 1: GENERATION ==========
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text, special_prompt)
+        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text)
         
-        # Track token usage
         total_input_tokens += input_tokens
         total_output_tokens += output_tokens
         
@@ -256,101 +329,129 @@ def main():
         # Strip unwanted metadata (e.g., null exam/year) before further processing
         for question in generated_questions:
             for key in list(question.keys()):
-                if (
-                    key in UNWANTED_METADATA_KEYS
-                    and question.get(key) is None
-                ):
+                if key in UNWANTED_METADATA_KEYS and question.get(key) is None:
                     question.pop(key, None)
+        
         print(f"\n[OK] Successfully generated {len(generated_questions)} question(s)")
         
-        # Add 'valid' field as the first key in each question
-        for i, question in enumerate(generated_questions):
-            # Create new dict with 'valid' as first key
-            generated_questions[i] = {"valid": None, **question}
-        
-        # Save generated questions to gen.json (pretty printed)
-        with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
-            json.dump(generated_questions, f, indent=2, ensure_ascii=False)
-        print(f"[OK] Saved {len(generated_questions)} question(s) to {OUTPUT_JSON} (awaiting validation)")
-        
-        # Save to gen.jsonl (one JSON per line)
-        with open(OUTPUT_JSONL, "w", encoding="utf-8") as f:
-            for question in generated_questions:
-                f.write(json.dumps(question, ensure_ascii=False) + "\n")
-        print(f"[OK] Saved to {OUTPUT_JSONL} (awaiting validation)")
-        
-        # Validate each question using the critic
-        print(f"\n--- Starting Validation Pass ---")
-        validated_questions = []
-        
-        for i, question in enumerate(generated_questions, 1):
-            print(f"\nValidating question {i}/{len(generated_questions)}...")
-            
-            # Add a small delay to avoid rate limiting (except for the first question)
-            if i > 1:
-                time.sleep(1)
-            
-            try:
-                evaluation, input_tokens, output_tokens = validate_question(question, critic_prompt_text, spec_text)
-                
-                # Track token usage
-                total_input_tokens += input_tokens
-                total_output_tokens += output_tokens
-                
-                well_posed = evaluation.get("well_posed", False)
-                answer_correct = evaluation.get("answer_correct", False)
-                level_appropriate = evaluation.get("level_appropriate", True)  # Default True for backwards compat
-                overall_pass = evaluation.get("overall_pass", False)
-                reasoning = evaluation.get("reasoning", "No reasoning provided")
-                
-                print(f"  Well-posed: {well_posed}")
-                print(f"  Answer correct: {answer_correct}")
-                print(f"  Level appropriate: {level_appropriate}")
-                print(f"  Overall: {'[PASSED]' if overall_pass else '[FAILED]'}")
-                
-                # Update the valid field
-                question["valid"] = overall_pass
-                
-                if not overall_pass:
-                    print(f"  Full validation reasoning:")
-                    print(f"  {reasoning}")
-                
-                if overall_pass:
-                    validated_questions.append(question)
-                
-                # Update files in-place after each validation
-                with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
-                    json.dump(generated_questions, f, indent=2, ensure_ascii=False)
-                with open(OUTPUT_JSONL, "w", encoding="utf-8") as f:
-                    for q in generated_questions:
-                        f.write(json.dumps(q, ensure_ascii=False) + "\n")
-                    
-            except Exception as e:
-                print(f"  [ERROR] Error during validation: {e}")
-                print(f"  Question skipped")
-                # Print the question that failed for debugging
-                print(f"  DEBUG: Question that failed validation:")
-                print(f"  {json.dumps(question, indent=2, ensure_ascii=False)[:300]}...")
-        
-        print(f"\n--- Validation Complete ---")
-        print(f"Passed: {len(validated_questions)}/{len(generated_questions)} questions")
-        print(f"[OK] All questions saved to {OUTPUT_JSON} and {OUTPUT_JSONL} with validation status")
-        
-        if not validated_questions:
-            print("\n[WARNING] No questions passed validation.")
-        else:
-            # Print summary
-            print("\nValidated questions summary:")
-            for i, q in enumerate(validated_questions, 1):
-                topics = q.get("topics", [])
-                difficulty = q.get("difficulty", "N/A")
-                print(f"  {i}. Difficulty: {difficulty}, Topics: {', '.join(topics)}")
+        # Save generated questions to gen.json and gen.jsonl
+        save_questions_dual(generated_questions, OUTPUT_GEN_JSON, OUTPUT_GEN_JSONL)
+        print(f"[OK] Saved to {OUTPUT_GEN_JSON} and {OUTPUT_GEN_JSONL}")
         
     except json.JSONDecodeError as e:
-        print(f"Error: Failed to parse JSON response: {e}")
+        print(f"Error: Failed to parse JSON response from generator: {e}")
         print(f"Response: {result}")
+        return
     except Exception as e:
         print(f"Error during generation: {e}")
+        return
+    
+    # ========== STAGE 2: CORRECTION ==========
+    try:
+        result, input_tokens, output_tokens = correct_questions(
+            generated_questions, corrector_prompt_text, spec_text
+        )
+        
+        total_input_tokens += input_tokens
+        total_output_tokens += output_tokens
+        
+        # Parse the JSON response
+        response_obj = json.loads(result)
+        
+        # Expect response to have a "questions" array
+        if "questions" not in response_obj:
+            print("Error: Corrector response does not contain 'questions' array")
+            print(f"Response: {result}")
+            return
+        
+        corrected_questions = response_obj["questions"]
+
+        # Strip unwanted metadata
+        for question in corrected_questions:
+            for key in list(question.keys()):
+                if key in UNWANTED_METADATA_KEYS and question.get(key) is None:
+                    question.pop(key, None)
+        
+        print(f"\n[OK] Successfully corrected {len(corrected_questions)} question(s)")
+        
+        # Save corrected questions to corrected.json and corrected.jsonl
+        save_questions_dual(corrected_questions, OUTPUT_CORRECTED_JSON, OUTPUT_CORRECTED_JSONL)
+        print(f"[OK] Saved to {OUTPUT_CORRECTED_JSON} and {OUTPUT_CORRECTED_JSONL}")
+        
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to parse JSON response from corrector: {e}")
+        print(f"Response: {result}")
+        return
+    except Exception as e:
+        print(f"Error during correction: {e}")
+        return
+    
+    # ========== STAGE 3: VALIDATION ==========
+    print(f"\n--- Stage 3: Validation Pass ---")
+    validated_questions = []
+    
+    # Add 'valid' field as the first key in each question
+    for i, question in enumerate(corrected_questions):
+        corrected_questions[i] = {"valid": None, **question}
+    
+    for i, question in enumerate(corrected_questions, 1):
+        print(f"\nValidating question {i}/{len(corrected_questions)}...")
+        
+        # Add a small delay to avoid rate limiting (except for the first question)
+        if i > 1:
+            time.sleep(1)
+        
+        try:
+            evaluation, input_tokens, output_tokens = validate_question(
+                question, critic_prompt_text, spec_text
+            )
+            
+            total_input_tokens += input_tokens
+            total_output_tokens += output_tokens
+            
+            well_posed = evaluation.get("well_posed", False)
+            answer_correct = evaluation.get("answer_correct", False)
+            level_appropriate = evaluation.get("level_appropriate", True)
+            overall_pass = evaluation.get("overall_pass", False)
+            reasoning = evaluation.get("reasoning", "No reasoning provided")
+            
+            print(f"  Well-posed: {well_posed}")
+            print(f"  Answer correct: {answer_correct}")
+            print(f"  Level appropriate: {level_appropriate}")
+            print(f"  Overall: {'[PASSED]' if overall_pass else '[FAILED]'}")
+            
+            # Update the valid field
+            question["valid"] = overall_pass
+            
+            if not overall_pass:
+                print(f"  Full validation reasoning:")
+                print(f"  {reasoning}")
+            
+            if overall_pass:
+                validated_questions.append(question)
+            
+            # Update files in-place after each validation
+            save_questions_dual(corrected_questions, OUTPUT_VALIDATED_JSON, OUTPUT_VALIDATED_JSONL)
+                
+        except Exception as e:
+            print(f"  [ERROR] Error during validation: {e}")
+            print(f"  Question skipped")
+            print(f"  DEBUG: Question that failed validation:")
+            print(f"  {json.dumps(question, indent=2, ensure_ascii=False)[:300]}...")
+    
+    print(f"\n--- Validation Complete ---")
+    print(f"Passed: {len(validated_questions)}/{len(corrected_questions)} questions")
+    print(f"[OK] All questions saved to {OUTPUT_VALIDATED_JSON} and {OUTPUT_VALIDATED_JSONL}")
+    
+    if not validated_questions:
+        print("\n[WARNING] No questions passed validation.")
+    else:
+        # Print summary
+        print("\nValidated questions summary:")
+        for i, q in enumerate(validated_questions, 1):
+            topics = q.get("topics", [])
+            difficulty = q.get("difficulty", "N/A")
+            print(f"  {i}. Difficulty: {difficulty}, Topics: {', '.join(topics)}")
     
     # Calculate total elapsed time
     script_elapsed_time = time.time() - script_start_time
@@ -377,17 +478,13 @@ def main():
     
     # Ask if user wants to clear the input.jsonl file
     print("\n")
-    clear_response = input("Do you want to clear the input.jsonl file? (y/n): ").strip().lower()
+    clear_response = input("Do you want to clear the 0_input.jsonl file? (y/n): ").strip().lower()
     
     if clear_response == 'y':
         try:
-            # Create parent directory if it doesn't exist
             INPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Empty the file (or create it if it doesn't exist)
             with open(INPUT_FILE, 'w', encoding='utf-8') as f:
-                pass  # Write nothing to empty the file
-            
+                pass
             print(f"✓ Cleared {INPUT_FILE}")
         except Exception as e:
             print(f"✗ Error clearing file: {e}")
@@ -397,4 +494,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

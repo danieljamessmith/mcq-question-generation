@@ -11,12 +11,20 @@ def clear_files_and_dirs():
     # Get script directory
     root_dir = Path(__file__).parent
     
-    # Define paths
+    # Define paths - all output files from each stage
+    # Files use numeric prefixes (0_, 1_, 2_, 3_) for natural sort order
     files_to_clear = [
+        # Stage 1: Transcription
         root_dir / "1-transcription" / "output.jsonl",
-        root_dir / "2-generation" / "gen.json",
-        root_dir / "2-generation" / "gen.jsonl",
-        root_dir / "2-generation" / "input_gen.jsonl",
+        # Stage 2: Generation (input, generator, corrector, validator outputs)
+        root_dir / "2-generation" / "0_input.jsonl",
+        root_dir / "2-generation" / "1_gen.json",
+        root_dir / "2-generation" / "1_gen.jsonl",
+        root_dir / "2-generation" / "2_corrected.json",
+        root_dir / "2-generation" / "2_corrected.jsonl",
+        root_dir / "2-generation" / "3_validated.json",
+        root_dir / "2-generation" / "3_validated.jsonl",
+        # Stage 3: Extraction
         root_dir / "3-extraction" / "output.tex",
         root_dir / "3-extraction" / "output_raw.tex",
         root_dir / "3-extraction" / "input_extract.jsonl",
@@ -92,4 +100,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
