@@ -1,12 +1,12 @@
 """
-Clear script - Empties output files and img directory
+Clear script - Empties output files and img/keys directories
 """
 import os
 from pathlib import Path
 
 
 def clear_files_and_dirs():
-    """Clear all output files and the img directory."""
+    """Clear all output files and the img/keys directories."""
     
     # Get script directory
     root_dir = Path(__file__).parent
@@ -31,6 +31,7 @@ def clear_files_and_dirs():
     ]
     
     img_dir = root_dir / "1-transcription" / "img"
+    keys_dir = root_dir / "1-transcription" / "keys"
     
     # Ask for confirmation
     print("This will empty the following files:")
@@ -42,6 +43,10 @@ def clear_files_and_dirs():
     img_status = "✓ exists" if img_dir.exists() else "✗ not found"
     img_count = len(list(img_dir.glob("*"))) if img_dir.exists() else 0
     print(f"  - {img_dir.relative_to(root_dir)} ({img_status}, {img_count} file(s))")
+    
+    keys_status = "✓ exists" if keys_dir.exists() else "✗ not found"
+    keys_count = len(list(keys_dir.glob("*"))) if keys_dir.exists() else 0
+    print(f"  - {keys_dir.relative_to(root_dir)} ({keys_status}, {keys_count} file(s))")
     
     # Get user confirmation
     response = input("\nAre you sure you want to proceed? (y/n): ").strip().lower()
@@ -80,13 +85,28 @@ def clear_files_and_dirs():
     except Exception as e:
         print(f"  ✗ Error clearing directory: {e}")
     
+    # Clear keys directory
+    print("\nClearing keys directory...")
+    try:
+        if keys_dir.exists():
+            deleted_count = 0
+            for file_path in keys_dir.glob("*"):
+                if file_path.is_file():
+                    file_path.unlink()
+                    deleted_count += 1
+            print(f"  ✓ Deleted {deleted_count} file(s) from {keys_dir.relative_to(root_dir)}")
+        else:
+            print(f"  ⚠ Directory not found: {keys_dir.relative_to(root_dir)}")
+    except Exception as e:
+        print(f"  ✗ Error clearing directory: {e}")
+    
     print("\n✓ Clear operation completed!")
 
 
 def main():
     """Main entry point."""
     print("="*60)
-    print("CLEAR SCRIPT - Empty output files and img directory")
+    print("CLEAR SCRIPT - Empty output files and img/keys directories")
     print("="*60)
     print()
     

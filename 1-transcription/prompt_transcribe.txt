@@ -36,3 +36,28 @@ Return a complete JSON object with these exact keys:
 }
 
 Remember: All backslashes in LaTeX must be doubled in JSON (e.g., "\\\\frac{1}{2}" for \frac{1}{2}).
+
+---===---
+
+AUTOPOPULATION INSTRUCTIONS:
+
+Occassionally the special_prompt (passed via CLI by user at runtime) will contain instructions to autopopulate certain json fields that would otherwise be left null.
+
+A typical example would be as thus
+
+~
+TMUA P1 2019. Fill id, year and paper
+~
+
+The expected autopopulations would then be as so:
+
+id:"TMUA_P1_2021_QXY" | Where QXY is read from the top-left of the image. e.g. TMUA_P1_2021_Q03 or TMUA_P1_2021_Q17. Follow this structure EXACTLY. Single digit numbers should be prefaced by a zero like Q01
+paper:"TMUA_P1"       | Note _P1 or _P2 is COMPULSORY following TMUA in the paper field. -If in doubt leave null.-
+year:2019
+
+and the other null fields left null (difficulty, answer_key etc). 
+
+NEVER modify the transcription due to requested autopopulations.
+ONLY perform autopopulations if requested in the special_prompt.
+NEVER fill difficulty or answer_key, even when autopopulating.
+IF IN DOUBT, LEAVE NULL. If the special_prompt contains confusing or contradictory autopopulation instructions (e.g. missing P1 or P2 in a TMUA transcription task) then leave affected fields null.

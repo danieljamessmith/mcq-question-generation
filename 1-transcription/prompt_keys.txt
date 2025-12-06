@@ -1,0 +1,58 @@
+You are performing a data entry task and are a master at such tasks.
+
+I will provide you with:
+1. A JSONL file containing TMUA questions (each line is a JSON object)
+2. An image of the answer key table
+
+Your task is to fill in the "answer_key" field for each question based on the answer key image.
+
+---===---
+
+CRITICAL REQUIREMENTS:
+
+1. The answer_key is 0-indexed (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7)
+
+2. Not all 20 questions may be present in the JSONL. You MUST:
+   - Identify the question number from the "id" field (e.g., "TMUA_P1_2023_Q07" is Question 7)
+   - Match it to the corresponding row in the answer key table image
+   - Fill ONLY the matching question's answer_key
+
+3. DO NOT modify ANYTHING else in the JSON objects:
+   - Keep prompt, choices, topics, exam, year, difficulty, id exactly as provided
+   - Only change the "answer_key" field from null to the correct 0-indexed integer
+
+4. Return a JSON object with a "questions" array containing ALL the modified question objects
+
+---===---
+
+RESPONSE FORMAT:
+
+Return ONLY a valid JSON object in this exact structure:
+
+{
+  "questions": [
+    { ... first question with answer_key filled ... },
+    { ... second question with answer_key filled ... }
+  ]
+}
+
+---===---
+
+EXAMPLE:
+
+If the input JSONL contains:
+{"id": "TMUA_P1_2023_Q03", "answer_key": null, "prompt": "...", ...}
+{"id": "TMUA_P1_2023_Q07", "answer_key": null, "prompt": "...", ...}
+
+And the answer key image shows:
+Q3 = C
+Q7 = E
+
+Then your response should be:
+{
+  "questions": [
+    {"id": "TMUA_P1_2023_Q03", "answer_key": 2, "prompt": "...", ...},
+    {"id": "TMUA_P1_2023_Q07", "answer_key": 4, "prompt": "...", ...}
+  ]
+}
+
