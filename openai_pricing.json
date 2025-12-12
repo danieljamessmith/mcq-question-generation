@@ -1,0 +1,19 @@
+{
+  "models": {
+    "gpt-5": {
+      "input_cost_per_million": 1.00,
+      "output_cost_per_million": 8.00
+    },
+    "gpt-5.1": {
+      "input_cost_per_million": 1.25,
+      "output_cost_per_million": 10.00
+    },
+    "gpt-5.2": {
+      "input_cost_per_million": 1.75,
+      "output_cost_per_million": 14.00
+    }
+  },
+  "last_updated": "2025-12-12",
+  "note": "Prices in USD per million tokens. Update manually when OpenAI changes pricing."
+}
+

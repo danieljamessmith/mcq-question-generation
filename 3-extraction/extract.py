@@ -11,12 +11,24 @@ if not API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set")
 client = OpenAI(api_key=API_KEY)
 
-# GPT-5 Pricing (as of 2025)
-INPUT_TOKEN_COST = 1.25 / 1_000_000  # $1.25 per million tokens
-OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
-
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
+PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
+
+# Load pricing from external file
+def load_pricing():
+    """Load model pricing from external JSON file."""
+    with open(PRICING_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+PRICING = load_pricing()
+
+# API Configuration
+API_CONFIG = {
+    "model": "gpt-5.2",
+    "reasoning_effort": "medium",
+    "max_completion_tokens": 20000
+}
 INPUT_FILE = SCRIPT_DIR / "input_extract.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_extract.txt"
 STYLE_PROMPT_FILE = SCRIPT_DIR / "prompt_style.txt"
@@ -138,15 +150,15 @@ The output should be an array of independent, self-contained question snippets o
     
     # Call OpenAI API
     response = client.chat.completions.create(
-        model="gpt-5.1",
+        model=API_CONFIG["model"],
         messages=[
             {
                 "role": "user",
                 "content": full_prompt
             }
         ],
-        reasoning_effort="medium",
-        max_completion_tokens=20000,
+        reasoning_effort=API_CONFIG["reasoning_effort"],
+        max_completion_tokens=API_CONFIG["max_completion_tokens"],
         response_format={"type": "json_object"},
     )
     
@@ -174,6 +186,14 @@ def main():
     Outputs individual question snippets WITHOUT page layout elements.
     Page layout and spacing between questions will be handled separately.
     """
+    # Print configuration summary
+    model_pricing = PRICING["models"][API_CONFIG["model"]]
+    print("=" * 50)
+    print(f"API CONFIG: model={API_CONFIG['model']} | reasoning={API_CONFIG['reasoning_effort']} | max_tokens={API_CONFIG['max_completion_tokens']}")
+    print(f"PRICING: ${model_pricing['input_cost_per_million']:.2f}/M input, ${model_pricing['output_cost_per_million']:.2f}/M output")
+    print(f"Pricing last updated: {PRICING.get('last_updated', 'unknown')}")
+    print("=" * 50)
+    
     # Start overall timing
     script_start_time = time.time()
     
@@ -340,13 +360,17 @@ def main():
     print(f"Total elapsed time:  {script_elapsed_time:.2f}s")
     print("-"*60)
     
-    # Calculate costs
-    input_cost = total_input_tokens * INPUT_TOKEN_COST
-    output_cost = total_output_tokens * OUTPUT_TOKEN_COST
+    # Calculate costs using pricing from JSON
+    model_pricing = PRICING["models"][API_CONFIG["model"]]
+    input_rate = model_pricing["input_cost_per_million"] / 1_000_000
+    output_rate = model_pricing["output_cost_per_million"] / 1_000_000
+    input_cost = total_input_tokens * input_rate
+    output_cost = total_output_tokens * output_rate
     total_cost = input_cost + output_cost
     
-    print(f"Input cost:  ${input_cost:.4f} (${INPUT_TOKEN_COST * 1_000_000:.2f}/M tokens)")
-    print(f"Output cost: ${output_cost:.4f} (${OUTPUT_TOKEN_COST * 1_000_000:.2f}/M tokens)")
+    print(f"Model: {API_CONFIG['model']}")
+    print(f"Input cost:  ${input_cost:.4f} (${model_pricing['input_cost_per_million']:.2f}/M tokens)")
+    print(f"Output cost: ${output_cost:.4f} (${model_pricing['output_cost_per_million']:.2f}/M tokens)")
     print(f"Total cost:  ${total_cost:.4f}")
     print("="*60)
     

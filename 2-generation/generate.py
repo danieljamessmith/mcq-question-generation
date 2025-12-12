@@ -10,12 +10,36 @@ if not API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is not set")
 client = OpenAI(api_key=API_KEY)
 
-# GPT-5 Pricing (as of 2025)
-INPUT_TOKEN_COST = 1.25 / 1_000_000  # $1.25 per million tokens
-OUTPUT_TOKEN_COST = 10.00 / 1_000_000  # $10.00 per million tokens
-
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
+PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
+
+# Load pricing from external file
+def load_pricing():
+    """Load model pricing from external JSON file."""
+    with open(PRICING_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+PRICING = load_pricing()
+
+# Stage-specific configurations (each stage can use a different model)
+GENERATOR_CONFIG = {
+    "model": "gpt-5.1",  # Creative generation - 5.1 is sufficient
+    "reasoning_effort": "none",
+    "max_completion_tokens": 20000,
+    "temperature": 1.4
+}
+CORRECTOR_CONFIG = {
+    "model": "gpt-5.2",  # Reasoning-heavy - benefits from 5.2
+    "reasoning_effort": "medium",
+    "max_completion_tokens": 32000
+}
+VALIDATOR_CONFIG = {
+    "model": "gpt-5.2",  # Reasoning-heavy - benefits from 5.2
+    "reasoning_effort": "medium",
+    "max_completion_tokens": 16000
+}
+
 INPUT_FILE = SCRIPT_DIR / "0_input.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_gen.txt"
 CORRECTOR_PROMPT_FILE = SCRIPT_DIR / "prompt_corrector.txt"
@@ -111,17 +135,17 @@ def generate_questions(examples, prompt_text, spec_text=""):
     
     # Call OpenAI API
     response = client.chat.completions.create(
-        model="gpt-5.1",
+        model=GENERATOR_CONFIG["model"],
         messages=[
             {
                 "role": "user",
                 "content": full_prompt
             }
         ],
-        reasoning_effort="none",
-        max_completion_tokens=20000,
+        reasoning_effort=GENERATOR_CONFIG["reasoning_effort"],
+        max_completion_tokens=GENERATOR_CONFIG["max_completion_tokens"],
         response_format={"type": "json_object"},
-        temperature=1.3,
+        temperature=GENERATOR_CONFIG["temperature"],
     )
     
     elapsed_time = time.time() - start_time
@@ -162,17 +186,17 @@ def correct_questions(questions, corrector_prompt_text, spec_text=""):
     print(f"Correcting {len(questions)} question(s)")
     print("Sending request to OpenAI API (with reasoning)...")
     
-    # Call OpenAI API with high reasoning effort
+    # Call OpenAI API with reasoning
     response = client.chat.completions.create(
-        model="gpt-5.1",
+        model=CORRECTOR_CONFIG["model"],
         messages=[
             {
                 "role": "user",
                 "content": full_prompt
             }
         ],
-        reasoning_effort="medium",
-        max_completion_tokens=32000,
+        reasoning_effort=CORRECTOR_CONFIG["reasoning_effort"],
+        max_completion_tokens=CORRECTOR_CONFIG["max_completion_tokens"],
         response_format={"type": "json_object"},
     )
     
@@ -217,15 +241,15 @@ def validate_question(question, critic_prompt_text, spec_text=""):
     
     # Call OpenAI API
     response = client.chat.completions.create(
-        model="gpt-5.1",
+        model=VALIDATOR_CONFIG["model"],
         messages=[
             {
                 "role": "user",
                 "content": full_prompt
             }
         ],
-        reasoning_effort="medium",
-        max_completion_tokens=16000,
+        reasoning_effort=VALIDATOR_CONFIG["reasoning_effort"],
+        max_completion_tokens=VALIDATOR_CONFIG["max_completion_tokens"],
         response_format={"type": "json_object"},
     )
     
@@ -258,17 +282,39 @@ def validate_question(question, critic_prompt_text, spec_text=""):
     return evaluation, input_tokens, output_tokens
 
 
+def get_model_pricing(model_name):
+    """Get pricing for a specific model from the loaded pricing data."""
+    if model_name in PRICING["models"]:
+        p = PRICING["models"][model_name]
+        return p["input_cost_per_million"] / 1_000_000, p["output_cost_per_million"] / 1_000_000
+    raise ValueError(f"Unknown model: {model_name}. Add it to openai_pricing.json")
+
+
 def main():
     """Main function to generate, correct, and validate questions."""
+    # Print configuration summary
+    print("=" * 60)
+    print("API CONFIG (per-stage model selection)")
+    gen_p = PRICING["models"][GENERATOR_CONFIG["model"]]
+    cor_p = PRICING["models"][CORRECTOR_CONFIG["model"]]
+    val_p = PRICING["models"][VALIDATOR_CONFIG["model"]]
+    print(f"  Stage 1 Generator:  {GENERATOR_CONFIG['model']} | reasoning={GENERATOR_CONFIG['reasoning_effort']:6} | max_tokens={GENERATOR_CONFIG['max_completion_tokens']} | temp={GENERATOR_CONFIG['temperature']}")
+    print(f"                      Pricing: ${gen_p['input_cost_per_million']:.2f}/M in, ${gen_p['output_cost_per_million']:.2f}/M out")
+    print(f"  Stage 2 Corrector:  {CORRECTOR_CONFIG['model']} | reasoning={CORRECTOR_CONFIG['reasoning_effort']:6} | max_tokens={CORRECTOR_CONFIG['max_completion_tokens']}")
+    print(f"                      Pricing: ${cor_p['input_cost_per_million']:.2f}/M in, ${cor_p['output_cost_per_million']:.2f}/M out")
+    print(f"  Stage 3 Validator:  {VALIDATOR_CONFIG['model']} | reasoning={VALIDATOR_CONFIG['reasoning_effort']:6} | max_tokens={VALIDATOR_CONFIG['max_completion_tokens']}")
+    print(f"                      Pricing: ${val_p['input_cost_per_million']:.2f}/M in, ${val_p['output_cost_per_million']:.2f}/M out")
+    print(f"Pricing last updated: {PRICING.get('last_updated', 'unknown')}")
+    print("=" * 60)
+    
     # Start overall timing
     script_start_time = time.time()
     
-    # Initialize token tracking
-    total_input_tokens = 0
-    total_output_tokens = 0
+    # Initialize per-model token tracking
+    token_usage = {}  # {model_name: {"input": count, "output": count}}
     
     # Empty all output files at the start
-    print("Emptying output files...")
+    print("\nEmptying output files...")
     empty_output_files()
     
     print("\nLoading prompts and examples...")
@@ -308,12 +354,18 @@ def main():
     
     print(f"Loaded {len(examples)} example question(s)")
     
+    # Helper to track tokens per model
+    def track_tokens(model, input_tok, output_tok):
+        if model not in token_usage:
+            token_usage[model] = {"input": 0, "output": 0}
+        token_usage[model]["input"] += input_tok
+        token_usage[model]["output"] += output_tok
+    
     # ========== STAGE 1: GENERATION ==========
     try:
         result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text)
         
-        total_input_tokens += input_tokens
-        total_output_tokens += output_tokens
+        track_tokens(GENERATOR_CONFIG["model"], input_tokens, output_tokens)
         
         # Parse the JSON response
         response_obj = json.loads(result)
@@ -352,8 +404,7 @@ def main():
             generated_questions, corrector_prompt_text, spec_text
         )
         
-        total_input_tokens += input_tokens
-        total_output_tokens += output_tokens
+        track_tokens(CORRECTOR_CONFIG["model"], input_tokens, output_tokens)
         
         # Parse the JSON response
         response_obj = json.loads(result)
@@ -406,8 +457,7 @@ def main():
                 question, critic_prompt_text, spec_text
             )
             
-            total_input_tokens += input_tokens
-            total_output_tokens += output_tokens
+            track_tokens(VALIDATOR_CONFIG["model"], input_tokens, output_tokens)
             
             well_posed = evaluation.get("well_posed", False)
             answer_correct = evaluation.get("answer_correct", False)
@@ -460,19 +510,28 @@ def main():
     print("\n" + "="*60)
     print("SUMMARY")
     print("="*60)
+    
+    # Calculate totals and per-model costs
+    total_input_tokens = sum(u["input"] for u in token_usage.values())
+    total_output_tokens = sum(u["output"] for u in token_usage.values())
+    
     print(f"Total input tokens:  {total_input_tokens:,}")
     print(f"Total output tokens: {total_output_tokens:,}")
     print(f"Total tokens:        {total_input_tokens + total_output_tokens:,}")
     print(f"Total elapsed time:  {script_elapsed_time:.2f}s")
     print("-"*60)
     
-    # Calculate costs
-    input_cost = total_input_tokens * INPUT_TOKEN_COST
-    output_cost = total_output_tokens * OUTPUT_TOKEN_COST
-    total_cost = input_cost + output_cost
+    # Calculate per-model costs
+    total_cost = 0
+    for model, usage in sorted(token_usage.items()):
+        input_rate, output_rate = get_model_pricing(model)
+        model_input_cost = usage["input"] * input_rate
+        model_output_cost = usage["output"] * output_rate
+        model_total = model_input_cost + model_output_cost
+        total_cost += model_total
+        print(f"{model}: {usage['input']:,} in + {usage['output']:,} out = ${model_total:.4f}")
     
-    print(f"Input cost:  ${input_cost:.4f} (${INPUT_TOKEN_COST * 1_000_000:.2f}/M tokens)")
-    print(f"Output cost: ${output_cost:.4f} (${OUTPUT_TOKEN_COST * 1_000_000:.2f}/M tokens)")
+    print("-"*60)
     print(f"Total cost:  ${total_cost:.4f}")
     print("="*60)
     
