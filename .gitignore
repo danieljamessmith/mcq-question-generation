@@ -8,15 +8,9 @@ comments.txt
 !/1-transcription/img/.gitkeep
 /1-transcription/keys/*
 !/1-transcription/keys/.gitkeep
-/1-transcription/output.jsonl
 
-/2-generation/gen.json
-/2-generation/input.jsonl
-
-/2-generation/gen.jsonl
-/3-extraction/input.jsonl
-/3-extraction/output.tex
-/3-extraction/output_raw.tex
+# Note: Data files (jsonl, json, tex outputs) are tracked with existence only
+# via the "empty" filter in .gitattributes - they appear as empty files in git
 
 # Python environment
 .venv/

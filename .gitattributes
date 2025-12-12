@@ -1,2 +1,22 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Track existence but ignore contents of data files (uses "empty" filter)
+# These files will appear in the repo as empty files
+
+# 1-transcription data files
+1-transcription/output.jsonl filter=empty
+
+# 2-generation data files
+2-generation/0_input.jsonl filter=empty
+2-generation/1_gen.json filter=empty
+2-generation/1_gen.jsonl filter=empty
+2-generation/2_corrected.json filter=empty
+2-generation/2_corrected.jsonl filter=empty
+2-generation/3_validated.json filter=empty
+2-generation/3_validated.jsonl filter=empty
+
+# 3-extraction data files
+3-extraction/input_extract.jsonl filter=empty
+3-extraction/output.tex filter=empty
+3-extraction/output_raw.tex filter=empty

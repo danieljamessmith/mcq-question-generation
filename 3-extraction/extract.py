@@ -26,9 +26,10 @@ PRICING = load_pricing()
 # API Configuration
 API_CONFIG = {
     "model": "gpt-5.2",
-    "reasoning_effort": "medium",
-    "max_completion_tokens": 20000
+    "reasoning_effort": "high",
+    "max_completion_tokens": 32000
 }
+
 INPUT_FILE = SCRIPT_DIR / "input_extract.jsonl"
 PROMPT_FILE = SCRIPT_DIR / "prompt_extract.txt"
 STYLE_PROMPT_FILE = SCRIPT_DIR / "prompt_style.txt"

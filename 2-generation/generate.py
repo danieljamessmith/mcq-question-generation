@@ -24,19 +24,19 @@ PRICING = load_pricing()
 
 # Stage-specific configurations (each stage can use a different model)
 GENERATOR_CONFIG = {
-    "model": "gpt-5.1",  # Creative generation - 5.1 is sufficient
-    "reasoning_effort": "none",
+    "model": "gpt-5.2",  
+    "reasoning_effort": "none",       # Required for `temperature` parameter in GPT5
     "max_completion_tokens": 20000,
-    "temperature": 1.4
+    "temperature": 1.3
 }
 CORRECTOR_CONFIG = {
-    "model": "gpt-5.2",  # Reasoning-heavy - benefits from 5.2
-    "reasoning_effort": "medium",
+    "model": "gpt-5.2",
+    "reasoning_effort": "high",
     "max_completion_tokens": 32000
 }
 VALIDATOR_CONFIG = {
-    "model": "gpt-5.2",  # Reasoning-heavy - benefits from 5.2
-    "reasoning_effort": "medium",
+    "model": "gpt-5.2",
+    "reasoning_effort": "high",
     "max_completion_tokens": 16000
 }
 
@@ -480,8 +480,8 @@ def main():
             if overall_pass:
                 validated_questions.append(question)
             
-            # Update files in-place after each validation
-            save_questions_dual(corrected_questions, OUTPUT_VALIDATED_JSON, OUTPUT_VALIDATED_JSONL)
+            # Update files in-place after each validation (only save passing questions)
+            save_questions_dual(validated_questions, OUTPUT_VALIDATED_JSON, OUTPUT_VALIDATED_JSONL)
                 
         except Exception as e:
             print(f"  [ERROR] Error during validation: {e}")

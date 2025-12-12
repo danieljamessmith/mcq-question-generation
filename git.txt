@@ -1,0 +1,2 @@
+git config filter.empty.clean "cat /dev/null"
+git config filter.empty.smudge cat

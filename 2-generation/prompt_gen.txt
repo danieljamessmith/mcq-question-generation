@@ -9,7 +9,18 @@ Given example questions below, generate less than 8 NEW questions that:
 4. Use proper LaTeX formatting for all mathematical expressions:
    • Use inline LaTeX with $...$ for math expressions (e.g., "$x^2$", "$\\frac{1}{2}$")
    • Use display LaTeX with \\[...\\] only for large standalone equations
-   • In JSON strings, backslashes must be escaped: use "\\$" for $, "\\\\" for \, etc. 
+   • In JSON strings, backslashes must be escaped: use "\\$" for $, "\\\\" for \, etc.
+
+---===---
+The number of generated questions should always be strictly less than 8. 
+
+Below 8, it should be weakly dependent on the number of inputted questions. 
+E.g. if 2 inputted questions, then 1,2,3 or 4 generated questions would be appropriate.
+E.g. if 9 inputted questions, then 5,6, or 7 generated questions would be appropriate. 
+And so on.
+
+This is NOT to suggest that each generated question need be in 1:1 correspondence with an inputted question. Generating question-by-question like this is DISCOURAGED. 
+---===---
 
 Each generated question MUST include:
 - "id": null (will be assigned later)

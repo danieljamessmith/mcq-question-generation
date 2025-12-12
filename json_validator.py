@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import re
 import sys
 from typing import List, Tuple
 
@@ -36,11 +37,31 @@ def read_lines_any_encoding(path: str) -> List[str]:
     return lines
 
 
+# Pattern to match delimiter/header lines in delimited JSONL files
+# Matches:
+#   - Lines consisting only of dashes (e.g., "-----")
+#   - TMUA section headers (e.g., "TMUA P1 2023", "TMUA P2 2022", "TMUA OTHER")
+DELIMITER_PATTERN = re.compile(
+    r"^-+$"  # Line of dashes only
+    r"|^TMUA\s+(?:P[12]\s+\d{4}|OTHER)$",  # TMUA headers
+    re.IGNORECASE,
+)
+
+
+def is_delimiter_line(line: str) -> bool:
+    """Check if a line is a delimiter or section header (not JSON data)."""
+    stripped = line.strip()
+    return bool(DELIMITER_PATTERN.match(stripped))
+
+
 def validate_lines(lines: List[str]) -> List[Tuple[int, str]]:
     invalid = []
     for i, line in enumerate(lines, start=1):
-        if not line.strip():
+        stripped = line.strip()
+        if not stripped:
             continue  # ignore completely blank lines
+        if is_delimiter_line(stripped):
+            continue  # ignore delimiter/header lines (e.g., "-----", "TMUA P1 2023")
         try:
             json.loads(line)
         except Exception as e:
@@ -70,7 +91,7 @@ def main() -> int:
     invalid = validate_lines(lines)
 
     if not invalid:
-        print("All non-blank lines are valid JSON.")
+        print("All data lines are valid JSON (blank lines and delimiters skipped).")
         return 0
 
     print(f"Found {len(invalid)} invalid line(s):")
