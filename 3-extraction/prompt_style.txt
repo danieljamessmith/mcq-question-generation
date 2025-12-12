@@ -18,18 +18,38 @@
 - End with: `% ===== END QUESTION [N] =====`
 
 **Choice formatting:**
-- End the final line of the question text with a line break: `\\[9pt]`
+- **Spacing flexibility:** Values like `\\[npt]` indicate vertical spacing where `n` is a number you choose (e.g., 6, 9, 12) based on visual balance and the provided examples. These are not rigid requirements.
+- End the final line of the question text with a line break: `\\[npt]`
 - Then start the choices in a tabular:
   ```
   \begin{tabular}{@{}ll@{}}
-  \textbf{A} & Option A \\[9pt]
-  \textbf{B} & Option B \\[9pt]
-  \textbf{C} & Option C \\[9pt]
+  \textbf{A} & Option A \\[npt]
+  \textbf{B} & Option B \\[npt]
+  \textbf{C} & Option C \\[npt]
   \textbf{D} & Option D
   \end{tabular}
   ```
-- Use `\\[9pt]` between individual options (but not after the last one)
+- Use `\\[npt]` between individual options (but not after the last one)
 - After the last choice, simply end the `tabular` with no additional spacing
+
+**CRITICAL - Long answer choices**: If an answer choice is too long (>80 characters), BREAK IT ACROSS MULTIPLE ROWS using continuation lines. This is especially common with quantifier-heavy logic statements:
+```
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & For every positive integer $n$ there exists a positive integer $k$ \\
+           & such that for every positive integer $m$, the number $n(m+k)$ is \\
+           & \textbf{not} a square \\[npt]
+\textbf{B} & There exists a positive integer $n$ such that for every positive \\
+           & integer $k$ and every positive integer $m$, the number $n(m+k)$ \\
+           & is \textbf{not} a square \\[npt]
+\textbf{C} & Short option that fits on one line
+\end{tabular}
+```
+Key rules for multi-line choices:
+- Break at natural phrase boundaries (after "such that", "for every", "there exists", conjunctions)
+- Aim for lines of roughly 60-70 characters max
+- Continuation lines use `&` only (no letter label)
+- Only add `\\[npt]` after the LAST line of each choice
+- Use plain `\\` (no spacing) between lines of the SAME choice
 
 **Special pattern formatting:**
 
@@ -37,7 +57,7 @@
 ```
 \[
 \begin{array}{@{}l l@{}}
-\textbf{I:} & \text{statement text} \\[2pt]
+\textbf{I:} & \text{statement text} \\[npt]
 \textbf{II:} & \text{statement text}
 \end{array}
 \]
@@ -47,7 +67,7 @@
 ```
 \[
 \begin{array}{@{}l l@{}}
-\textbf{III:} & \text{Therefore, for every positive integer $n$, the value $n^2+n+41$} \\[2pt]
+\textbf{III:} & \text{Therefore, for every positive integer $n$, the value $n^2+n+41$} \\[npt]
 & \text{cannot be written as a product of two integers greater than $1$}
 \end{array}
 \]
@@ -58,7 +78,7 @@ NEVER put very long sentences in a single `\text{}` as they will overflow the pa
 ```
 \[
 \begin{array}{c}
-\text{for all $\varepsilon>0$ there exists $\delta>0$ such that for all $x\in\mathbb{R}$,} \\[2pt]
+\text{for all $\varepsilon>0$ there exists $\delta>0$ such that for all $x\in\mathbb{R}$,} \\[npt]
 \text{if $|x-x_0|<\delta$ then $|f(x)-f(x_0)|<\varepsilon$}
 \end{array}
 \]
@@ -124,6 +144,12 @@ NEVER put very long sentences in a single `\text{}` as they will overflow the pa
 - Use textual variations (encouraged for testing comprehension): "if P then Q" = "P is sufficient for Q" = "Q if P" = "Q is necessary for P"
 
 **OTHER MATHEMATICAL NOTATION**
+- **Differentials**: ALWAYS use upright `\mathrm{d}` for differentials, not italic `d`:
+  - ✓ CORRECT: `$\frac{\mathrm{d}y}{\mathrm{d}x}$` — derivative notation
+  - ✗ WRONG: `$\frac{dy}{dx}$` — italic d looks like a variable
+  - ✓ CORRECT: `$\int f(x) \,\mathrm{d}x$` — integral notation (note the `\,` thin space before `\mathrm{d}`)
+  - ✗ WRONG: `$\int f(x) dx$` — missing upright d and spacing
+  - This applies to ALL differential notation: `\mathrm{d}t`, `\mathrm{d}\theta`, `\mathrm{d}^2y`, etc.
 - **Divisibility**: ALWAYS prefer "$n^3-n$ is divisible by $12$" over "$12$ divides $n^3-n$". The "divisible by" phrasing is clearer for students.
 - Avoid interval notation like $[1,3]$ or $(\infty, infty)$. Preferred is always inequality notation such as $1 \le x \le 3$ or "for all real $x$" respectively.
 - Avoid set notation. Instead of writing $x\in\{a,b\}$ write "$x=a$ or $x=b$"
