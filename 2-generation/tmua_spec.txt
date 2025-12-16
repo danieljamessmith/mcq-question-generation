@@ -1,3 +1,7 @@
+---===---===---
+TMUA SPECIFICATION TO FOLLOW
+---===---===---
+
 © UAT-UK 2024
 TEST OF MATHEMATICS FOR UNIVERSITY ADMISSION (TMUA)
 Content Specification
@@ -11,6 +15,8 @@ answers, so candidates are advised to attempt all questions.
 There is no formula booklet for this test; students are expected to understand and recall all
 relevant formulae.
 Candidates may not use calculators.
+
+---===---
 
 The details of the papers are as follows.
 
@@ -31,6 +37,8 @@ Requirements: Sections 1 and 2 below
 This paper tests the candidate’s ability to apply their conceptual knowledge to constructing
 and analysing mathematical arguments. For this paper candidates are expected to be familiar
 with the contents of Sections 1 and 2 below.
+
+---===---
 
 SECTION 1
 This section sets out the mathematical knowledge requirement for both papers of the test. The
@@ -623,3 +631,7 @@ Err1  Identifying errors in purported proofs.
 Err2  Be aware of common mathematical errors in purported proofs; for example, claiming
       “if ab = ac, then b = c” or assuming “if sin A = sin B, then A = B”, neither of which are valid
       deductions.
+
+---===---===---
+TMUA SPECIFICATION END
+---===---===---

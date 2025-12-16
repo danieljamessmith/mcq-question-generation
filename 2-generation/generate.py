@@ -13,6 +13,7 @@ client = OpenAI(api_key=API_KEY)
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
 PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
+LEVEL_INSTRUCTIONS_FILE = SCRIPT_DIR.parent / "level_instructions.txt"
 
 # Load pricing from external file
 def load_pricing():
@@ -67,7 +68,7 @@ def load_text_file(file_path):
 def load_examples(input_file):
     """Load example questions from JSONL file, filtering out specified keys."""
     examples = []
-    excluded_keys = {"id", "year", "exam"}
+    excluded_keys = {"id", "year", "exam", "difficulty"}
     
     with open(input_file, "r", encoding="utf-8") as f:
         for line in f:
@@ -110,7 +111,7 @@ def empty_output_files():
             pass  # Empty the file
 
 
-def generate_questions(examples, prompt_text, spec_text=""):
+def generate_questions(examples, prompt_text, spec_text="", level_text=""):
     """Generate novel questions using OpenAI API (Stage 1: Generator)."""
     start_time = time.time()
     
@@ -125,9 +126,14 @@ def generate_questions(examples, prompt_text, spec_text=""):
         spec_section = f"\n\n**TMUA Content Specification (topics and knowledge requirements):**\n{spec_text}"
     else:
         spec_section = ""
+
+    # Inject global level/notation instructions if provided
+    level_section = ""
+    if level_text and level_text.strip():
+        level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
     # Construct the full prompt
-    full_prompt = f"{prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}"
+    full_prompt = f"{prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}{level_section}"
     
     print("\n--- Stage 1: Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
@@ -165,7 +171,7 @@ def generate_questions(examples, prompt_text, spec_text=""):
     return result, input_tokens, output_tokens
 
 
-def correct_questions(questions, corrector_prompt_text, spec_text=""):
+def correct_questions(questions, corrector_prompt_text, spec_text="", level_text=""):
     """Correct generated questions using OpenAI API (Stage 2: Corrector)."""
     start_time = time.time()
     
@@ -178,9 +184,14 @@ def correct_questions(questions, corrector_prompt_text, spec_text=""):
         spec_section = f"\n\n**TMUA Content Specification (topics and knowledge requirements):**\n{spec_text}"
     else:
         spec_section = ""
+
+    # Inject global level/notation instructions if provided
+    level_section = ""
+    if level_text and level_text.strip():
+        level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
     # Construct the full prompt
-    full_prompt = f"{corrector_prompt_text}\n\nQuestions to correct:\n\n{questions_text}{spec_section}"
+    full_prompt = f"{corrector_prompt_text}\n\nQuestions to correct:\n\n{questions_text}{spec_section}{level_section}"
     
     print("\n--- Stage 2: Question Correction ---")
     print(f"Correcting {len(questions)} question(s)")
@@ -223,7 +234,7 @@ def correct_questions(questions, corrector_prompt_text, spec_text=""):
     return result, input_tokens, output_tokens
 
 
-def validate_question(question, critic_prompt_text, spec_text=""):
+def validate_question(question, critic_prompt_text, spec_text="", level_text=""):
     """Validate a single question using the critic prompt (Stage 3: Validator)."""
     start_time = time.time()
     
@@ -235,9 +246,14 @@ def validate_question(question, critic_prompt_text, spec_text=""):
         spec_section = f"\n\n**TMUA Content Specification (for level-appropriateness check):**\n{spec_text}"
     else:
         spec_section = ""
+
+    # Inject global level/notation instructions if provided
+    level_section = ""
+    if level_text and level_text.strip():
+        level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
     # Construct the full prompt
-    full_prompt = f"{critic_prompt_text}\n\nQuestion to evaluate:\n\n{question_text}{spec_section}"
+    full_prompt = f"{critic_prompt_text}\n\nQuestion to evaluate:\n\n{question_text}{spec_section}{level_section}"
     
     # Call OpenAI API
     response = client.chat.completions.create(
@@ -340,6 +356,18 @@ def main():
             print(f"Loaded TMUA content specification from {SPEC_FILE}")
     else:
         print(f"Note: {SPEC_FILE} not found, proceeding without spec reference")
+
+    # Load global level/notation instructions (optional but recommended)
+    level_text = ""
+    if LEVEL_INSTRUCTIONS_FILE.exists():
+        level_text = load_text_file(LEVEL_INSTRUCTIONS_FILE)
+        if level_text.strip():
+            print(f"Loaded global level/notation instructions from {LEVEL_INSTRUCTIONS_FILE}")
+        else:
+            level_text = ""
+            print(f"Note: {LEVEL_INSTRUCTIONS_FILE} is empty, proceeding without global level/notation instructions")
+    else:
+        print(f"Note: {LEVEL_INSTRUCTIONS_FILE} not found, proceeding without global level/notation instructions")
     
     # Load examples from input.jsonl
     if not INPUT_FILE.exists():
@@ -363,7 +391,7 @@ def main():
     
     # ========== STAGE 1: GENERATION ==========
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text)
+        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text, level_text)
         
         track_tokens(GENERATOR_CONFIG["model"], input_tokens, output_tokens)
         
@@ -401,7 +429,7 @@ def main():
     # ========== STAGE 2: CORRECTION ==========
     try:
         result, input_tokens, output_tokens = correct_questions(
-            generated_questions, corrector_prompt_text, spec_text
+            generated_questions, corrector_prompt_text, spec_text, level_text
         )
         
         track_tokens(CORRECTOR_CONFIG["model"], input_tokens, output_tokens)
@@ -454,7 +482,7 @@ def main():
         
         try:
             evaluation, input_tokens, output_tokens = validate_question(
-                question, critic_prompt_text, spec_text
+                question, critic_prompt_text, spec_text, level_text
             )
             
             track_tokens(VALIDATOR_CONFIG["model"], input_tokens, output_tokens)

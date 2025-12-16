@@ -14,6 +14,7 @@ client = OpenAI(api_key=API_KEY)
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
 PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
+LEVEL_INSTRUCTIONS_FILE = SCRIPT_DIR.parent / "level_instructions.txt"
 
 # Load pricing from external file
 def load_pricing():
@@ -108,6 +109,13 @@ def extract_latex_from_json(questions, prompt_text, style_prompt_text, examples,
         style_prompt_section = f"\n\n**Style Requirements:**\n{style_prompt_text}"
     else:
         style_prompt_section = ""
+
+    # Inject global level/notation instructions if provided
+    level_section = ""
+    if LEVEL_INSTRUCTIONS_FILE.exists():
+        level_text = load_text_file(LEVEL_INSTRUCTIONS_FILE)
+        if level_text.strip():
+            level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
     # Inject special prompt if provided
     if special_prompt.strip():
@@ -116,7 +124,7 @@ def extract_latex_from_json(questions, prompt_text, style_prompt_text, examples,
         special_prompt_text = ""
     
     # Construct the full prompt
-    full_prompt = f"""{prompt_text}{style_prompt_section}{special_prompt_text}
+    full_prompt = f"""{prompt_text}{style_prompt_section}{level_section}{special_prompt_text}
 
 **EXAMPLE LaTeX SNIPPETS:**
 

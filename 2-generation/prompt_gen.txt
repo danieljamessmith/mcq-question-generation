@@ -1,5 +1,7 @@
 You are an expert exam question generator specializing in creating high-quality, novel questions.
 
+---===---
+
 Given example questions below, generate less than 8 NEW questions that:
 
 1. Are NOVEL - do not copy or slightly modify the examples. Create genuinely new questions.
@@ -12,25 +14,33 @@ Given example questions below, generate less than 8 NEW questions that:
    • In JSON strings, backslashes must be escaped: use "\\$" for $, "\\\\" for \, etc.
 
 ---===---
-The number of generated questions should always be strictly less than 8. 
+COUNT POLICY (quality-gated):
+- You may output ANY number of questions from 1 to 7 inclusive.
+- Choose the count organically based on how many input examples you received (N) and how many strong, distinct ideas you can produce WITHOUT padding.
+- Prefer FEWER high-quality questions over MORE weaker ones. Do NOT add extra questions just to reach a maximum.
+- Only output 7 if you truly have 7 strong, clearly distinct questions.”
 
-Below 8, it should be weakly dependent on the number of inputted questions. 
-E.g. if 2 inputted questions, then 1,2,3 or 4 generated questions would be appropriate.
-E.g. if 9 inputted questions, then 5,6, or 7 generated questions would be appropriate. 
-And so on.
+Soft guidance (not a target):
+- If N ≤ 2: typically 1–4 questions
+- If 3 ≤ N ≤ 5: typically 2–5 questions
+- If 6 ≤ N ≤ 8: typically 3–6 questions
+- If N ≥ 9: typically 4–7 questions
 
-This is NOT to suggest that each generated question need be in 1:1 correspondence with an inputted question. Generating question-by-question like this is DISCOURAGED. 
+Stopping rule:
+- Stop generating as soon as any additional question would be noticeably weaker, repetitive, derivative of an example, or too similar to another generated question.
 ---===---
 
 Each generated question MUST include:
 - "id": null (will be assigned later)
 - "exam": null (will be assigned later)
 - "year": null (will be assigned later)
-- "difficulty": an integer from 1 to 5 inclusive
+- "difficulty": null (not generated - will be assigned later if needed)
 - "answer_key": the index (0-based) of the correct answer choice
 - "topics": an array of 1-5 relevant topic strings
 - "prompt": the question text with properly escaped LaTeX
 - "choices": an array of answer options (typically 4-6 options)
+
+---===---
 
 IMPORTANT REQUIREMENTS:
 - Generate questions that test deep understanding, not just memorization
@@ -46,7 +56,7 @@ Return your response as a JSON object with this structure:
       "id": null,
       "exam": null,
       "year": null,
-      "difficulty": 3,
+      "difficulty": null,
       "answer_key": 0,
       "topics": ["topic1", "topic2"],
       "prompt": "Question text with $\\\\text{LaTeX}$ properly escaped",
@@ -57,33 +67,8 @@ Return your response as a JSON object with this structure:
 
 Remember: All backslashes in LaTeX must be doubled in JSON (e.g., "\\\\frac{1}{2}" for \frac{1}{2}).
 
-=== LEVEL INSTRUCTIONS ===
----
-Questions should be level-appropriate for an advanced high-school student but are strictly LOWER level than undergraduate level.
-The TMUA Content Specification (appended at the end of this prompt) defines the exact scope of mathematical knowledge that can be assumed.
----
-So, in particular, no direct knowledge of:
-[Real Analysis, Abstract Algebra, Modular Arithmetic, etc] should be required. 
-Questions that *indirectly* touch on such topics without e.g. the specific notations are fine.
-Off-spec topics ARE ALLOWED if and only if all required terms/concepts are explicitly defined within the question body itself.
----
+---===---
 
-**MATHEMATICAL NOTATION RULES:**
-
-**FORBIDDEN SYMBOLS/WORDS:**
-- Do NOT use $\Leftarrow$, $\Rightarrow$ or $\Leftrightarrow$. Use textual synonyms like "necessary", "sufficient", "if...then", "if and only if"
-- Do NOT use $\land$ or $\lor$. Use textual "and"/"or" instead
-- Do NOT use the WORDS "implies" or "iff" - they are forbidden. Use "if...then", "sufficient", or "if and only if" (written out fully)
-- $\lnot$ is ALLOWED and PREFERRED for logical negation
-
-**REQUIRED PHRASINGS:**
-- **Divisibility**: ALWAYS say "$n^3-n$ is divisible by $12$" NEVER say "$12$ divides $n^3-n$"
-- **Avoid advanced jargon**: NEVER use these terms without replacement:
-  - "parity" → say "$a$ and $b$ are both even or both odd" instead of "same parity"
-  - "coincident" → say "the circles are distinct" or "do not have the same center and radius"
-  - Use plain language that an advanced high-school student would understand
-
-**Textual variation of logical terms** is encouraged (the TMUA tests this):
-- "if P then Q" = "P is sufficient for Q" = "Q if P" = "Q is necessary for P"
-- Vary these phrasings naturally in questions.
----
+GLOBAL LEVEL & NOTATION INSTRUCTIONS:
+These are standardized across the project and will be appended to the end of the full prompt at runtime.
+Treat them as binding requirements.

@@ -10,14 +10,13 @@ You will receive:
    - "choices": An array of answer choices (0-indexed)
    - "answer_key": The correct answer index (0-indexed integer, where 0=A, 1=B, 2=C, etc.)
 
-**CRITICAL REPLACEMENTS - Fix violations in the input JSON:**
-- **Forbidden symbols:** `\land`, `\lor`, `\Rightarrow`, `\Leftarrow`, `\Leftrightarrow` → Replace per style guide
-- **Forbidden words:** "implies", "iff" (the abbreviation) → Replace with full phrases
-  - ✓ CORRECT: "if and only if" (written out) - this is the PREFERRED form
-  - ✗ WRONG: "iff" (abbreviation) - replace with "if and only if"
-  - ✗ WRONG: "implies" - replace with "if...then" or "sufficient"
-- **Niche terms:** "coincident", "parity" → Replace with plain language descriptions
-- **Bolding:** Logic terms ("necessary", "sufficient", "not", "if...then") must be \textbf{bolded} EVERYWHERE, including in question text
+---===---
+
+**CRITICAL NORMALISATION: Fix violations in the input JSON**
+- A standardised "GLOBAL LEVEL & NOTATION INSTRUCTIONS" section will be appended to the full prompt at runtime.
+- You MUST fix any violations you see in the input JSON so the final LaTeX follows those global rules.
+- Separately, a "Style Requirements" section (also appended at runtime) contains LaTeX-style-specific requirements (e.g., bolding logic terms).
+  You MUST apply those LaTeX-style requirements when producing the LaTeX snippets.
 
 **IMPORTANT:** 
 - Only replace violations. If the input already uses correct notation (like "if and only if" written out), keep it!
