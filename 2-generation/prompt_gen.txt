@@ -28,6 +28,7 @@ Soft guidance (not a target):
 
 Stopping rule:
 - Stop generating as soon as any additional question would be noticeably weaker, repetitive, derivative of an example, or too similar to another generated question.
+
 ---===---
 
 Each generated question MUST include:
