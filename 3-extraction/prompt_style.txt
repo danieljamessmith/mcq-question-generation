@@ -9,6 +9,8 @@
 - Equations that are central to a question should be formatted using display mode e.g. \[ \lvert x-a\rvert + \lvert x-b\rvert = \lvert a-b\rvert \] is preferred 
   over $\lvert x-a\rvert + \lvert x-b\rvert = \lvert a-b\rvert$ for a question counting the solutions of said equation.
 
+---===---
+
 **WITHIN-QUESTION FORMATTING:**
 
 **Question structure:**
@@ -16,6 +18,132 @@
 - Include: `% Answer: [index] (Letter: [A/B/C/...])`
 - Use: `\item` to begin the question content
 - End with: `% ===== END QUESTION [N] =====`
+
+---===---
+
+** LINE BREAKS **
+- Liberal use of `\\` in the question statements is required. Particularly if the question statements are short. 
+- Carefully analyse the use of line breaks in the appended examples.tex documents.
+
+✓ CORRECT EXAMPLE ✓
+```
+% Answer: 5 (Letter: F)
+\item
+Consider 
+
+\[P(x)=x^4+ax^3+bx^2+ax+1\] 
+
+where $a$ and $b$ are real constants. \\
+
+Suppose $P(2)=0$ and $P\bigl(-\tfrac12\bigr)=0$ \\
+
+What is the value of $b$? \\[9pt]
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $-13$ \\[9pt]
+\textbf{B} & $-5$ \\[9pt]
+\textbf{C} & $0$ \\[9pt]
+\textbf{D} & $5$ \\[9pt]
+\textbf{E} & $13$ \\[9pt]
+\textbf{F} & $-\tfrac{17}{4}$
+\end{tabular}
+```
+
+✗ INCORRECT EXAMPLE ✗
+```
+% Answer: 5 (Letter: F)
+\item
+Consider 
+\[P(x)=x^4+ax^3+bx^2+ax+1\] 
+where $a$ and $b$ are real constants. Suppose $P(2)=0$ and $P\bigl(-\tfrac12\bigr)=0$. What is the value of $b$?\\[9pt]
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $-13$ \\[9pt]
+\textbf{B} & $-5$ \\[9pt]
+\textbf{C} & $0$ \\[9pt]
+\textbf{D} & $5$ \\[9pt]
+\textbf{E} & $13$ \\[9pt]
+\textbf{F} & $-\tfrac{17}{4}$
+\end{tabular}
+```
+
+- !!CRITICALLY: A blank line must follow a line break `\\` in a question stem else the spacing will not render correctly!!
+
+✗ INCORRECT EXAMPLE (line breaks but no subsequent blank lines) ✗
+```
+% Answer: 5 (Letter: F)
+\item
+Consider \\
+\[P(x)=x^4+ax^3+bx^2+ax+1\] \\
+where $a$ and $b$ are real constants. \\
+Suppose $P(2)=0$ and $P\bigl(-\tfrac12\bigr)=0$ \\
+What is the value of $b$?\\[9pt]
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $-13$ \\[9pt]
+\textbf{B} & $-5$ \\[9pt]
+\textbf{C} & $0$ \\[9pt]
+\textbf{D} & $5$ \\[9pt]
+\textbf{E} & $13$ \\[9pt]
+\textbf{F} & $-\tfrac{17}{4}$
+\end{tabular}
+```
+
+---===---
+
+** PUNCTUATION **
+- Ending ~mathematical lines~ with punctuation (e.g. . or , or ;) is NOT encouraged.
+- If a line ends with words, USE CORRECT PUNCUATION.
+- If a line ends with mathematics, DO NOT USE PUNCTUATION LIKE . or , or ;. 
+- ? is ALWAYS OKAY
+- CAREFULLY SEE USE OF PUNCTUATION IN PROVIDED EXAMPLES
+
+
+✓ CORRECT EXAMPLE ✓
+```
+% Answer: 1 (Letter: B)
+\item
+A function $y=f(x)+c$, where $c$ is a constant, satisfies the differential equation
+\[
+\frac{\mathrm{d}y}{\mathrm{d}x}=2x-|x|
+\]
+for all real $x$ \\
+
+Which one of the following could be an expression for $f(x)$?\\[9pt]
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $x^2+x|x|$ \\[9pt]
+\textbf{B} & $x^2-\tfrac{1}{2}x|x|$ \\[9pt]
+\textbf{C} & $x^2+\tfrac{1}{2}x|x|$ \\[9pt]
+\textbf{D} & $x^2-x|x|$ \\[9pt]
+\textbf{E} & $\tfrac{1}{2}x^2-x|x|$ \\[9pt]
+\textbf{F} & $\tfrac{1}{2}x^2+x|x|$
+\end{tabular}
+```
+
+✗ INCORRECT EXAMPLE ✗
+```
+% Answer: 1 (Letter: B)
+\item
+A function $y=f(x)+c$, where $c$ is a constant, satisfies the differential equation
+\[
+\frac{\mathrm{d}y}{\mathrm{d}x}=2x-|x|,
+\]
+for all real $x$. \\
+
+Which one of the following could be an expression for $f(x)$?\\[9pt]
+
+\begin{tabular}{@{}ll@{}}
+\textbf{A} & $x^2+x|x|$ \\[9pt]
+\textbf{B} & $x^2-\tfrac{1}{2}x|x|$ \\[9pt]
+\textbf{C} & $x^2+\tfrac{1}{2}x|x|$ \\[9pt]
+\textbf{D} & $x^2-x|x|$ \\[9pt]
+\textbf{E} & $\tfrac{1}{2}x^2-x|x|$ \\[9pt]
+\textbf{F} & $\tfrac{1}{2}x^2+x|x|$
+\end{tabular}
+```
+
+---===---
 
 **Choice formatting:**
 - **Spacing flexibility:** Values like `\\[npt]` indicate vertical spacing where `n` is a number you choose (e.g., 6, 9, 12) based on visual balance and the provided examples. These are not rigid requirements.
@@ -32,7 +160,7 @@
 - Use `\\[npt]` between individual options (but not after the last one)
 - After the last choice, simply end the `tabular` with no additional spacing
 
-**CRITICAL - Long answer choices**: If an answer choice is too long (>80 characters), BREAK IT ACROSS MULTIPLE ROWS using continuation lines. This is especially common with quantifier-heavy logic statements:
+**CRITICAL - Long answer choices**: If an answer choice is too long ([[>70 characters]]), BREAK IT ACROSS MULTIPLE ROWS using continuation lines. This is especially common with quantifier-heavy logic statements:
 ```
 \begin{tabular}{@{}ll@{}}
 \textbf{A} & For every positive integer $n$ there exists a positive integer $k$ \\
@@ -50,6 +178,10 @@ Key rules for multi-line choices:
 - Continuation lines use `&` only (no letter label)
 - Only add `\\[npt]` after the LAST line of each choice
 - Use plain `\\` (no spacing) between lines of the SAME choice
+
+
+---===---
+
 
 **Special pattern formatting:**
 
@@ -104,6 +236,8 @@ NEVER put very long sentences in a single `\text{}` as they will overflow the pa
 - Multi-line prompts with display math should use `\[...\]` notation
 - Inline math should use `$...$` notation
 
+---===---
+
 **MATHEMATICAL LOGIC NOTATION** (CRITICAL - REPLACE ANY FORBIDDEN NOTATION IN INPUT)
 
 **FORBIDDEN NOTATIONS - MUST BE REPLACED:**
@@ -122,12 +256,6 @@ NEVER put very long sentences in a single `\text{}` as they will overflow the pa
 
 **CLARIFICATION:** Only replace violations. If input already uses "\textbf{if and only if}" written out, that's perfect - keep it!
 
-**Additional rules:**
-- FORBIDDEN WORDS: 
-  - "implies" - NEVER use this word. Replace with "if...then", "sufficient", etc.
-  - "iff" (abbreviation) - NEVER use this abbreviation. Replace with "if and only if" written out fully
-  - Note: "if and only if" written out in full is CORRECT and should be kept!
-
 **BOLDING RULES (CRITICAL - APPLY EVERYWHERE):**
 - Logic-technical terms MUST be \textbf{bolded} **EVERYWHERE they appear** (not just in choices/quotes):
   - "necessary", "sufficient", "if...then", "and" (in logic context), "or" (in logic context), "not" (in logic context)
@@ -143,9 +271,13 @@ NEVER put very long sentences in a single `\text{}` as they will overflow the pa
 
 - Use textual variations (encouraged for testing comprehension): "if P then Q" = "P is sufficient for Q" = "Q if P" = "Q is necessary for P"
 
+---===---
+
 - Differentials (LaTeX): use upright differentials with proper spacing:
   - ✓ $\frac{\mathrm{d}y}{\mathrm{d}x}$, ✓ $\int f(x)\,\mathrm{d}x$
   - ✗ $\frac{dy}{dx}$, ✗ $\int f(x)\,dx$
+
+---===---
 
 **OTHER MATHEMATICAL NOTATION**
 - Follow the appended **GLOBAL LEVEL & NOTATION INSTRUCTIONS** for non-formatting mathematical notation and wording policies

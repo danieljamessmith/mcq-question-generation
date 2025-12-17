@@ -152,7 +152,6 @@ The output should be an array of independent, self-contained question snippets o
     print("\n--- Starting LaTeX Snippet Extraction ---")
     print(f"Using {len(examples)} example file(s) as style reference")
     print(f"Converting {len(questions)} question(s) to individual LaTeX snippets")
-    print(f"Note: Snippets will NOT include page layout elements (\\hrulefill, \\vspace, etc.)")
     if special_prompt.strip():
         print(f"Special prompt: '{special_prompt}'")
     print("Sending request to OpenAI API...")
@@ -295,8 +294,26 @@ def main():
         latex_snippets = response_obj["latex_snippets"]
         print(f"\n[OK] Successfully extracted {len(latex_snippets)} LaTeX snippet(s)")
         
-        # Combine snippets with blank lines between them
-        latex_output = "\n\n".join(latex_snippets)
+        # Combine snippets with proper separators between them
+        # Between odd and even questions (1→2, 3→4, etc.): \vfill \hrulefill \vfill
+        # Between even and odd questions (2→3, 4→5, etc.): page break with spacing
+        SEP_ODD_TO_EVEN = "\n\n\\vfill\n\\hrulefill\n\\vfill\n\n"
+        SEP_EVEN_TO_ODD = "\n\n\\vspace*{20pt}\n\\newpage\n\\vspace*{20pt}\n\n"
+        
+        parts = []
+        for i, snippet in enumerate(latex_snippets):
+            parts.append(snippet)
+            # Add separator after this snippet (if not the last one)
+            if i < len(latex_snippets) - 1:
+                question_num = i + 1  # 1-indexed question number
+                if question_num % 2 == 1:
+                    # After odd question (before even): horizontal rule separator
+                    parts.append(SEP_ODD_TO_EVEN)
+                else:
+                    # After even question (before odd): page break
+                    parts.append(SEP_EVEN_TO_ODD)
+        
+        latex_output = "".join(parts)
         
         # Write raw snippets to output_raw.tex
         with open(OUTPUT_RAW_FILE, "w", encoding="utf-8") as f:
