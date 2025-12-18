@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import random
 from pathlib import Path
 from openai import OpenAI
 
@@ -79,6 +80,9 @@ def load_examples(input_file):
                 filtered_example = {k: v for k, v in example.items() if k not in excluded_keys}
                 examples.append(filtered_example)
     
+    # Randomly shuffle the examples so the model sees them in varied order
+    random.shuffle(examples)
+    
     return examples
 
 
@@ -133,7 +137,7 @@ def generate_questions(examples, prompt_text, spec_text="", level_text=""):
         level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
     # Construct the full prompt
-    full_prompt = f"{prompt_text}\n\nExisting example questions:\n\n{examples_text}{spec_section}{level_section}"
+    full_prompt = f"{prompt_text}\n\n---===---\n\nExisting example questions:\n\n{examples_text}{spec_section}{level_section}"
     
     print("\n--- Stage 1: Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
