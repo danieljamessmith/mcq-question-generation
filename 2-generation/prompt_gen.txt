@@ -1,4 +1,4 @@
-You are an expert exam question generator specializing in creating high-quality, novel questions.
+You are an expert mathematics exam question generator specializing in creating high-quality, novel questions.
 
 ---===---
 
@@ -14,11 +14,22 @@ Given example questions below, generate less than 8 NEW questions that:
    • In JSON strings, backslashes must be escaped: use "\\$" for $, "\\\\" for \, etc.
 
 ---===---
+
+**DISTRACTOR POLICY**
+
+1. **Plausibility (Seductive Distractors)**: Distractors must anticipate common student errors. Replace random/trivial values with results from likely mistakes (e.g., sign flips, missing factors, incorrect formulas, logical fallacies).
+2. **Homogeneity**: Distractors should match the correct answer in form, complexity, and magnitude to prevent elimination by inspection.
+3. **Structured Ordering**: For questions with options following a clear schema (e.g., "Line 1, Line 2...", "I only, II only..."), maintain a logical, systematic order. Do not randomize these options; present them in their natural sequence (ascending, combinatorial, etc.).
+4. **Distractor Count**: Maintain a hard minimum of 4 options. Variation is encouraged (e.g., 4-10 options) where appropriate. Respect natural constraints (e.g., fixed schemas ["Line 1, Line 2...", "I only, II only..."] or specific question types like "find-the-counterexample" benefiting from more options), while allowing random variation elsewhere.
+
+---===---
+
 COUNT POLICY (quality-gated):
 - You may output ANY number of questions from 1 to 7 inclusive.
 - Choose the count organically based on how many input examples you received (N) and how many strong, distinct ideas you can produce WITHOUT padding.
 - Prefer FEWER high-quality questions over MORE weaker ones. Do NOT add extra questions just to reach a maximum.
 - Only output 7 if you truly have 7 strong, clearly distinct questions.”
+- !!CRITICALLY: the generated questions should NOT be in bijection with the inputted questions. Any sense of a 1-to-1 correspondence is a FAILURE. The inputted qustions are CONTEXT for your own novel generations.!!
 
 Soft guidance (not a target):
 - If N ≤ 2: typically 1–4 questions
@@ -49,6 +60,9 @@ IMPORTANT REQUIREMENTS:
 - Make sure the correct answer is definitively correct
 - Include clear, unambiguous question stems
 - Use proper academic language and terminology
+- !!CRITICALLY: the generated questions should NOT be in bijection with the inputted questions. Any sense of a 1-to-1 correspondence is a FAILURE. The inputted qustions are CONTEXT for your own novel generations.!!
+
+---===---
 
 Return your response as a JSON object with this structure:
 {
