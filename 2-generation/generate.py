@@ -2,6 +2,7 @@ import os
 import json
 import time
 import random
+import sys
 from pathlib import Path
 from openai import OpenAI
 
@@ -115,7 +116,7 @@ def empty_output_files():
             pass  # Empty the file
 
 
-def generate_questions(examples, prompt_text, spec_text="", level_text=""):
+def generate_questions(examples, prompt_text, spec_text="", level_text="", special_prompt=""):
     """Generate novel questions using OpenAI API (Stage 1: Generator)."""
     start_time = time.time()
     
@@ -136,8 +137,13 @@ def generate_questions(examples, prompt_text, spec_text="", level_text=""):
     if level_text and level_text.strip():
         level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
+    # Inject special prompt section if provided (placed between main prompt and examples)
+    special_prompt_section = ""
+    if special_prompt and special_prompt.strip():
+        special_prompt_section = f"\n\n**SPECIAL REQUEST (incorporate into generated questions without overriding example context):**\n{special_prompt}\n\n---===---"
+    
     # Construct the full prompt
-    full_prompt = f"{prompt_text}\n\n---===---\n\nExisting example questions:\n\n{examples_text}{spec_section}{level_section}"
+    full_prompt = f"{prompt_text}\n\n---===---{special_prompt_section}\n\nExisting example questions:\n\n{examples_text}{spec_section}{level_section}"
     
     print("\n--- Stage 1: Question Generation ---")
     print(f"Using {len(examples)} example(s) as context")
@@ -373,6 +379,14 @@ def main():
     else:
         print(f"Note: {LEVEL_INSTRUCTIONS_FILE} not found, proceeding without global level/notation instructions")
     
+    # Parse command-line arguments for special prompt
+    special_prompt = ""
+    if len(sys.argv) > 1:
+        special_prompt = sys.argv[1]
+        print(f"\nSpecial prompt provided: '{special_prompt}'")
+    else:
+        print("\nNo special prompt provided (using default behavior)")
+    
     # Load examples from input.jsonl
     if not INPUT_FILE.exists():
         print(f"Error: {INPUT_FILE} not found")
@@ -395,7 +409,7 @@ def main():
     
     # ========== STAGE 1: GENERATION ==========
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text, level_text)
+        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text, level_text, special_prompt)
         
         track_tokens(GENERATOR_CONFIG["model"], input_tokens, output_tokens)
         
