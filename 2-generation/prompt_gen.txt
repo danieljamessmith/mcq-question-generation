@@ -20,7 +20,7 @@ Given example questions below, generate less than 8 NEW questions that:
 1. **Plausibility (Seductive Distractors)**: Distractors must anticipate common student errors. Replace random/trivial values with results from likely mistakes (e.g., sign flips, missing factors, incorrect formulas, logical fallacies).
 2. **Homogeneity**: Distractors should match the correct answer in form, complexity, and magnitude to prevent elimination by inspection.
 3. **Structured Ordering**: For questions with options following a clear schema (e.g., "Line 1, Line 2...", "I only, II only..."), maintain a logical, systematic order. Do not randomize these options; present them in their natural sequence (ascending, combinatorial, etc.).
-4. **Distractor Count**: Maintain a hard minimum of 4 options. Variation is encouraged (e.g., 4-10 options) where appropriate. Respect natural constraints (e.g., fixed schemas ["Line 1, Line 2...", "I only, II only..."] or specific question types like "find-the-counterexample" benefiting from more options), while allowing random variation elsewhere.
+4. **Distractor Count**: MINIMUM 5 options is preferred. There is NO hard cap on the maximum number of options. For logic/negation/counterexample questions, you are STRONGLY ENCOURAGED to provide numerous options (6-8+) to prevent guessing by elimination. Respect natural constraints (e.g., fixed schemas ["Line 1, Line 2...", "I only, II only..."] or specific question types like "find-the-counterexample" benefiting from more options), while allowing random variation elsewhere. Bias towards MORE options.
 
 ---===---
 

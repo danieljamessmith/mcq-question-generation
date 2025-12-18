@@ -32,8 +32,8 @@ Examples of mistakes the generator may make:
 
 (C) The question is well-posed but there are more than one potentially correct answers. Remove all but one of the correct answers (leaving at least 4 options) and ensure answer_key points to the remaining correct answer.
 
-(D) The question is valid, but the distractors are trivial, random, or easily eliminated. Enhance them by replacing random values with "seductive distractors" derived from common calculation errors (e.g., sign flips, missing factors, incorrect formulas, missaplication of logic [e.g. negation] rules/terminology etc).
-    In particular (& as an illustrative example of a poor distractor error): for a counterexamples questions, the list of potential counterexamples should not be reducible to 1 by looking at either the Antecedent of Consequent of the given statement alone.
+(D) The question is valid, but the distractors are trivial, random, or easily eliminated. Enhance by ADDING "seductive distractors" derived from common calculation errors (e.g., sign flips, missing factors, incorrect formulas, misapplication of logic [e.g. negation] rules/terminology etc), or by tweaking the question parameters so existing options become harder to eliminate.
+    In particular (& as an illustrative example of a poor distractor error): for counterexample questions, the list of potential counterexamples should not be reducible to 1 by looking at either the Antecedent or Consequent of the given statement alone.
 
 and so on. Other mistakes are possible and will be seen. The above is a non-exhaustive list.
 
@@ -59,15 +59,16 @@ However, for valid or near-valid questions, you are EXPECTED to intervene.
 1. **Plausibility (Seductive Distractors)**: Distractors must anticipate common student errors. Replace random/trivial values with results from likely mistakes (e.g., sign flips, missing factors, incorrect formulas, logical fallacies).
 2. **Homogeneity**: Distractors should match the correct answer in form, complexity, and magnitude to prevent elimination by inspection.
 3. **Structured Ordering**: For questions with options following a clear schema (e.g., "Line 1, Line 2...", "I only, II only..."), maintain a logical, systematic order. Do not randomize these options; present them in their natural sequence (ascending, combinatorial, etc.).
-4. **Distractor Count**: Maintain a hard minimum of 4 options. Variation is encouraged (e.g., 4-10 options) where appropriate. Respect natural constraints (e.g., fixed schemas ["Line 1, Line 2...", "I only, II only..."] or specific question types like "find-the-counterexample" benefiting from more options), while allowing random variation elsewhere.
+4. **Distractor Count**: MINIMUM 5 options is preferred. There is NO hard cap on the maximum number of options. For logic/negation/counterexample questions, you are STRONGLY ENCOURAGED to provide numerous options (6-8+) to prevent guessing by elimination. Respect natural constraints (e.g., fixed schemas ["Line 1, Line 2...", "I only, II only..."] or specific question types like "find-the-counterexample" benefiting from more options), while allowing random variation elsewhere. Bias towards MORE options.
+5. **Option Preservation**: Do NOT delete options merely because they are "easy to eliminate". Only remove options that cause ill-posedness (e.g., duplicate correct answers, multiple valid answers). If an option is trivially eliminable, respond by (a) adding stronger distractors, or (b) tweaking the question so that option becomes harder to rule out. Preserve natural schemas (e.g., consecutive integers 0,1,2,3,4,5 for "count" questions) even if some values are implausible—aesthetic coherence matters.
 
 ---===---
 
 **ENHANCEMENT POLICY**
 
 Do not just "fix" the question; "finish" it.
-1. **Seductive Distractors**: If the provided distractors are random integers, REPLACE them with values resulting from common misconceptions.
-2. **Option Count**: If a question has only 4 options, ADD a 5th option that acts as a strong distractor.
+1. **Seductive Distractors**: If the provided distractors are weak, ADD values resulting from common misconceptions. Do not delete existing options unless they cause ill-posedness. If options follow a natural schema (consecutive integers, combinatorial patterns, etc.), preserve that schema intact.
+2. **Option Count**: Consider increasing the number of options (e.g. to 6-8) IF high-quality, plausible distractors exist. ESPECIALLY for logic, negation, or "which statement is true" questions, more options are preferred to prevent guessing. However, do not dilute the quality with weak fillers.
 3. **Clarity**: Rewrite ambiguous phrasing to be rigorous and precise (following TMUA style).
 
 **Constraint**: enhancements must preserve the original "core idea" of the question. You are polishing the diamond, not swapping the stone.
@@ -127,6 +128,7 @@ Return a JSON object with the same structure:
 - Rewrite questions from scratch
 - Change the fundamental nature or topic of a question
 - Spend excessive reasoning on unsalvageable ('multiply-flawed') questions
+- Delete options from a natural schema (e.g., 0,1,2,3,4,5) just because one is "easy to eliminate"
 
 ---===---
 
