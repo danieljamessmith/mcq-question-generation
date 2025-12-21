@@ -298,7 +298,7 @@ def main():
         # Between odd and even questions (1→2, 3→4, etc.): \vfill \hrulefill \vfill
         # Between even and odd questions (2→3, 4→5, etc.): page break with spacing
         SEP_ODD_TO_EVEN = "\n\n\\vfill\n\\hrulefill\n\\vfill\n\n"
-        SEP_EVEN_TO_ODD = "\n\n\\vspace*{20pt}\n\\newpage\n\\vspace*{20pt}\n\n"
+        SEP_EVEN_TO_ODD = "\n\n\\vspace*{10pt}\n\\newpage\n\\vspace*{10pt}\n\n"
         
         parts = []
         for i, snippet in enumerate(latex_snippets):

@@ -244,26 +244,24 @@ def correct_questions(questions, corrector_prompt_text, spec_text="", level_text
     return result, input_tokens, output_tokens
 
 
-def validate_question(question, critic_prompt_text, spec_text="", level_text=""):
-    """Validate a single question using the critic prompt (Stage 3: Validator)."""
+def validate_question(question, critic_prompt_text, level_text=""):
+    """Validate a single question using the critic prompt (Stage 3: Validator).
+    
+    Note: TMUA spec is intentionally NOT passed to the validator. Level-appropriateness
+    is easy to manually check, massively increases input tokens, and causes edge case fails.
+    """
     start_time = time.time()
     
     # Format the question for validation
     question_text = json.dumps(question, indent=2, ensure_ascii=False)
-    
-    # Inject spec reference if provided
-    if spec_text.strip():
-        spec_section = f"\n\n**TMUA Content Specification (for level-appropriateness check):**\n{spec_text}"
-    else:
-        spec_section = ""
 
     # Inject global level/notation instructions if provided
     level_section = ""
     if level_text and level_text.strip():
         level_section = f"\n\n**GLOBAL LEVEL & NOTATION INSTRUCTIONS (binding):**\n{level_text}"
     
-    # Construct the full prompt
-    full_prompt = f"{critic_prompt_text}\n\nQuestion to evaluate:\n\n{question_text}{spec_section}{level_section}"
+    # Construct the full prompt (no spec_text - level-appropriateness is manually checked)
+    full_prompt = f"{critic_prompt_text}\n\nQuestion to evaluate:\n\n{question_text}{level_section}"
     
     # Call OpenAI API
     response = client.chat.completions.create(
@@ -500,20 +498,18 @@ def main():
         
         try:
             evaluation, input_tokens, output_tokens = validate_question(
-                question, critic_prompt_text, spec_text, level_text
+                question, critic_prompt_text, level_text
             )
             
             track_tokens(VALIDATOR_CONFIG["model"], input_tokens, output_tokens)
             
             well_posed = evaluation.get("well_posed", False)
             answer_correct = evaluation.get("answer_correct", False)
-            level_appropriate = evaluation.get("level_appropriate", True)
             overall_pass = evaluation.get("overall_pass", False)
             reasoning = evaluation.get("reasoning", "No reasoning provided")
             
             print(f"  Well-posed: {well_posed}")
             print(f"  Answer correct: {answer_correct}")
-            print(f"  Level appropriate: {level_appropriate}")
             print(f"  Overall: {'[PASSED]' if overall_pass else '[FAILED]'}")
             
             # Update the valid field

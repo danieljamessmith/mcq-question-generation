@@ -17,31 +17,17 @@ For the question provided below, you must:
    - Ensure no other choices could be considered correct
    - Check for any mathematical errors in the answer choices
 
-3. Check LEVEL-APPROPRIATENESS (using the TMUA Content Specification appended below):
-   - The question should only require knowledge covered in the TMUA spec
-   - OFF-SPEC content IS ALLOWED if and only if:
-     * All off-spec terms, concepts, and definitions are explicitly provided in the question body
-     * A student with only TMUA-level knowledge could understand and solve the question
-   - INVALID examples (should FAIL):
-     * Using terms like "differentiable almost everywhere", "Cauchy sequence", "modular arithmetic" 
-       without defining them in the question
-     * Assuming knowledge of undergraduate-level concepts not in the spec
-   - VALID examples (should PASS):
-     * "A sequence $(a_n)$ is called 'splendid' if [definition]. Which of the following..."
-     * Questions that define any advanced terms they use within the question body
-
 ---===---
 
 Return your evaluation as a JSON object with this structure:
 {
   "well_posed": true or false,
   "answer_correct": true or false,
-  "level_appropriate": true or false,
-  "reasoning": "Detailed explanation of your evaluation, including any mathematical working and level-appropriateness assessment",
+  "reasoning": "Detailed explanation of your evaluation, including any mathematical working",
   "overall_pass": true or false
 }
 
-Set "overall_pass" to true ONLY if ALL of "well_posed", "answer_correct", and "level_appropriate" are true.
+Set "overall_pass" to true ONLY if BOTH "well_posed" and "answer_correct" are true.
 
 Be thorough in your mathematical verification. If you find any ambiguity, error, or issue, set the relevant field to false and explain clearly in the reasoning.
 
@@ -49,4 +35,4 @@ Be thorough in your mathematical verification. If you find any ambiguity, error,
 
 GLOBAL LEVEL & NOTATION INSTRUCTIONS:
 These are standardized across the project and will be appended to the end of the full prompt at runtime.
-Treat them as binding requirements when assessing level-appropriateness and notation compliance.
+Treat them as binding requirements when assessing notation compliance.
