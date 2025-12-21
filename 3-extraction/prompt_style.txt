@@ -174,7 +174,7 @@ Which one of the following could be an expression for $f(x)$?\\[9pt]
 ```
 Key rules for multi-line choices:
 - Break at natural phrase boundaries (after "such that", "for every", "there exists", conjunctions)
-- Aim for lines of roughly 60-70 characters max
+- Aim for lines of roughly 80 characters max
 - Continuation lines use `&` only (no letter label)
 - Only add `\\[npt]` after the LAST line of each choice
 - Use plain `\\` (no spacing) between lines of the SAME choice
