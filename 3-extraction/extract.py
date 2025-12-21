@@ -39,6 +39,12 @@ PREAMBLE_FILE = SCRIPT_DIR / "preamble.tex"
 OUTPUT_RAW_FILE = SCRIPT_DIR / "output_raw.tex"
 OUTPUT_FILE = SCRIPT_DIR / "output.tex"
 
+# Question separators (edit these to customize spacing between questions)
+# Between odd and even questions (1→2, 3→4, etc.): horizontal rule separator
+SEP_ODD_TO_EVEN = "\n\n\\vfill\n\\hrulefill\n\\vfill\n\n"
+# Between even and odd questions (2→3, 4→5, etc.): page break with spacing
+SEP_EVEN_TO_ODD = "\n\n\\vspace*{10pt}\n\\newpage\n\\vspace*{10pt}\n\n"
+
 
 def load_text_file(file_path):
     """Load text content from a file."""
@@ -295,11 +301,6 @@ def main():
         print(f"\n[OK] Successfully extracted {len(latex_snippets)} LaTeX snippet(s)")
         
         # Combine snippets with proper separators between them
-        # Between odd and even questions (1→2, 3→4, etc.): \vfill \hrulefill \vfill
-        # Between even and odd questions (2→3, 4→5, etc.): page break with spacing
-        SEP_ODD_TO_EVEN = "\n\n\\vfill\n\\hrulefill\n\\vfill\n\n"
-        SEP_EVEN_TO_ODD = "\n\n\\vspace*{10pt}\n\\newpage\n\\vspace*{10pt}\n\n"
-        
         parts = []
         for i, snippet in enumerate(latex_snippets):
             parts.append(snippet)
