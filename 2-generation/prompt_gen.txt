@@ -2,12 +2,44 @@ You are an expert mathematics exam question generator specializing in creating h
 
 ---===---
 
-Given example questions below, generate less than 8 NEW questions that:
+**YOUR TASK:**
 
-1. Are NOVEL - do not copy or slightly modify the examples. Create genuinely new questions.
-   *CRITICALLY* small pertubations of the given examples are NOT encouraged. Your aim is to generate novel, interesting, unseen questions. 
-2. Follow the same format and style as the examples.
-3. Cover similar or related topics, but explore different aspects or scenarios.
+You will be shown example questions. These examples demonstrate:
+- The JSON FORMAT you must follow
+- The STYLE and TONE expected (precise, academic, TMUA-appropriate)
+- The DIFFICULTY LEVEL to target
+- The TOPIC AREAS that are in-scope
+
+The examples do NOT define what questions you should generate. You must create genuinely original questions that a student who has seen the examples would find SURPRISING and FRESH.
+
+---===---
+
+**ANTI-PERTURBATION RULE (CRITICAL):**
+
+The most common failure mode is "lazy perturbation": taking an example and making small changes (swapping sin↔cos, changing constants, flipping x↔y, etc.). This is FORBIDDEN.
+
+Before generating each question, mentally ask: "If a student saw Example X and then my question, would they think 'this is just a variant of X'?" If yes, DISCARD IT.
+
+✗ BAD: Example asks about $\sin x \cos x = p$; you generate $\sin x + \cos x = k$  
+✗ BAD: Example has curve $(|x|-2)^2+(y+1)^2=9$; you generate $(x-1)^2+(|y|-2)^2=16$  
+✗ BAD: Example asks "which statement can be counterexampled by [fact A]"; you ask the same for [fact B]  
+✗ BAD: Example has sequence $a_{n+1} = f(a_n)$; you generate sequence $b_{n+1} = g(b_n)$ with similar structure
+
+✓ GOOD: Example is about sequence recurrence; you generate a question about divisibility properties of sequence terms  
+✓ GOOD: Example is about counting curve intersections; you generate a question about tangent lines or area  
+✓ GOOD: Example involves f(x)+g(x)=h(x) systems; you generate a question about function composition or inverses
+
+The examples inform TOPIC AREAS, DIFFICULTY AND STYLE. Within those areas, you must find DIFFERENT ANGLES, DIFFERENT STRUCTURES, DIFFERENT QUESTION TYPES.
+
+---===---
+
+**WHAT TO GENERATE:**
+
+Generate 1–7 NEW questions that:
+
+1. Are STRUCTURALLY DISTINCT from the examples (different question archetype, not just different numbers)
+2. Follow the same JSON format and academic style as the examples
+3. Draw from the same broad topic areas, but explore DIFFERENT mathematical structures or question types
 4. Use proper LaTeX formatting for all mathematical expressions:
    • Use inline LaTeX with $...$ for math expressions (e.g., "$x^2$", "$\\frac{1}{2}$")
    • Use display LaTeX with \\[...\\] only for large standalone equations
@@ -28,13 +60,17 @@ COUNT POLICY (quality-gated):
 - Output 1–7 questions based purely on how many strong, distinct ideas you can produce—NOT based on input count.
 - Typically 2–5 questions is ideal. Only exceed 5 if you have genuinely distinct, high-quality ideas.
 - Prefer FEWER high-quality questions over MORE weaker ones. Do NOT pad to reach a maximum.
-- !!CRITICALLY: the generated questions should NOT be in bijection with the inputted questions. Any sense of a 1-to-1 correspondence is a FAILURE. The inputted questions are CONTEXT for your own novel generations.!!
+- The number of generated questions should have NO relationship to the number of input examples. If given 5 examples, you might generate 2 questions. If given 2 examples, you might generate 5. There is NO correspondence.
 
 DIVERSITY REQUIREMENT:
-- Ensure generated questions are diverse FROM EACH OTHER—vary topics, question types, and mathematical techniques across your outputs.
+- Ensure generated questions are diverse FROM EACH OTHER—vary topics, question types, and mathematical structures across your outputs.
+- Each generated question should feel like it came from a DIFFERENT creative direction.
 
 Stopping rule:
-- Stop generating as soon as any additional question would be noticeably weaker, repetitive, derivative of an example, or too similar to another generated question.
+- Stop generating as soon as any additional question would be:
+  • Noticeably weaker in quality
+  • Too similar to another generated question
+  • **Recognizably derived from an input example** (the perturbation failure mode)
 
 ---===---
 
@@ -56,7 +92,9 @@ IMPORTANT REQUIREMENTS:
 - Make sure the correct answer is definitively correct
 - Include clear, unambiguous question stems
 - Use proper academic language and terminology
-- !!CRITICALLY: the generated questions should NOT be in bijection with the inputted questions. Any sense of a 1-to-1 correspondence is a FAILURE. The inputted questions are CONTEXT for your own novel generations.!!
+
+**FINAL SELF-CHECK (apply before outputting each question):**
+For each question you're about to output, identify which input example (if any) it most resembles. If you can name a specific example and describe a simple transformation (e.g., "Example 3 with sin→cos", "Example 1 with different recurrence"), REJECT that question and generate something else. Only output questions where the resemblance is at most "same broad topic area".
 
 ---===---
 

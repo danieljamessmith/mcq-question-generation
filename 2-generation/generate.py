@@ -30,7 +30,7 @@ GENERATOR_CONFIG = {
     "model": "gpt-5.2",  
     "reasoning_effort": "none",       # Required for `temperature` parameter in GPT5
     "max_completion_tokens": 20000,
-    "temperature": 1.3
+    "temperature": 1.4
 }
 CORRECTOR_CONFIG = {
     "model": "gpt-5.2",

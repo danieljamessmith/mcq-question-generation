@@ -114,13 +114,36 @@ Return a JSON object with the same structure:
 
 ---===---
 
+**MINIMUM REASONING REQUIREMENTS (CRITICAL):**
+
+You have advanced reasoning capabilities. USE THEM THOROUGHLY. Do not return quickly—the generator has no reasoning and makes subtle errors that require careful analysis to catch.
+
+For EACH question, you MUST:
+
+1. **SOLVE the problem yourself** from scratch. Work through the mathematics step by step. Do not assume the generator's answer is correct.
+
+2. **VERIFY the answer_key** by checking that your computed answer matches the option at that index. If not, fix the answer_key OR add/modify options.
+
+3. **AUDIT each distractor** for plausibility:
+   - Does it result from a common student error?
+   - Is it distinguishable from the correct answer in form/magnitude?
+   - Are there any "give-away" options that can be trivially eliminated?
+
+4. **CHECK for ambiguity** in the prompt. Is there only one valid interpretation? Is the question well-defined for all relevant inputs?
+
+5. **ASSESS difficulty** against TMUA standards. Is this appropriately challenging? Could minor parameter tweaks make it more interesting without making it tedious?
+
+Do NOT skip these steps even if a question "looks fine". The generator frequently produces questions that appear valid but contain subtle mathematical errors (wrong domain, edge case failures, multiple valid answers, etc.).
+
+---===---
+
 **CRITICAL OUTPUT REQUIREMENTS:**
 
 1. Return ALL questions from the input, even if unchanged or fundamentally flawed
 2. Preserve the exact order of questions
 3. Maintain proper JSON escaping for LaTeX (double backslashes: \\frac, \\sqrt, etc.)
 4. Keep id, exam, year as null - do not modify these metadata fields
-6. The answer_key must be a valid zero-indexed integer pointing to the correct choice
+5. The answer_key must be a valid zero-indexed integer pointing to the correct choice
 
 ---===---
 
