@@ -5,7 +5,12 @@ import time
 import shutil
 import sys
 from pathlib import Path
+
+# Add parent directory to path for shared imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from openai import OpenAI
+from spinner import Spinner
 
 # Initialize OpenAI API
 API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -70,30 +75,31 @@ def transcribe_image(image_path, prompt_text, template_text, special_prompt="", 
     # Construct the full prompt
     full_prompt = f"{prompt_with_special}\n\nTemplate structure:\n{template_text}"
     
-    # Call OpenAI Vision API
-    response = client.chat.completions.create(
-        model=API_CONFIG["model"],
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": full_prompt
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{base64_image}"
+    # Call OpenAI Vision API with spinner
+    with Spinner("Transcribing image"):
+        response = client.chat.completions.create(
+            model=API_CONFIG["model"],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": full_prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}"
+                            }
                         }
-                    }
-                ]
-            }
-        ],
-        reasoning_effort=API_CONFIG["reasoning_effort"],
-        max_completion_tokens=API_CONFIG["max_completion_tokens"],
-        response_format={"type": "json_object"},
-    )
+                    ]
+                }
+            ],
+            reasoning_effort=API_CONFIG["reasoning_effort"],
+            max_completion_tokens=API_CONFIG["max_completion_tokens"],
+            response_format={"type": "json_object"},
+        )
     
     # Calculate elapsed time
     elapsed_time = time.time() - start_time

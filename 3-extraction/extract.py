@@ -3,7 +3,12 @@ import json
 import time
 import sys
 from pathlib import Path
+
+# Add parent directory to path for shared imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from openai import OpenAI
+from spinner import Spinner
 
 # Initialize OpenAI API
 API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -160,21 +165,21 @@ The output should be an array of independent, self-contained question snippets o
     print(f"Converting {len(questions)} question(s) to individual LaTeX snippets")
     if special_prompt.strip():
         print(f"Special prompt: '{special_prompt}'")
-    print("Sending request to OpenAI API...")
     
-    # Call OpenAI API
-    response = client.chat.completions.create(
-        model=API_CONFIG["model"],
-        messages=[
-            {
-                "role": "user",
-                "content": full_prompt
-            }
-        ],
-        reasoning_effort=API_CONFIG["reasoning_effort"],
-        max_completion_tokens=API_CONFIG["max_completion_tokens"],
-        response_format={"type": "json_object"},
-    )
+    # Call OpenAI API with spinner
+    with Spinner("Extracting LaTeX snippets"):
+        response = client.chat.completions.create(
+            model=API_CONFIG["model"],
+            messages=[
+                {
+                    "role": "user",
+                    "content": full_prompt
+                }
+            ],
+            reasoning_effort=API_CONFIG["reasoning_effort"],
+            max_completion_tokens=API_CONFIG["max_completion_tokens"],
+            response_format={"type": "json_object"},
+        )
     
     # Calculate elapsed time
     elapsed_time = time.time() - start_time
