@@ -20,3 +20,6 @@
 3-extraction/input_extract.jsonl filter=empty
 3-extraction/output.tex filter=empty
 3-extraction/output_raw.tex filter=empty
+
+# 4-update data files
+4-update/output_update.jsonl filter=empty

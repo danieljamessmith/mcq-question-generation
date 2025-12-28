@@ -1,5 +1,5 @@
 """
-Clear script - Empties output files and img/keys directories
+Clear script - Empties output files and clears working directories
 """
 import os
 from pathlib import Path
@@ -28,6 +28,10 @@ def clear_files_and_dirs():
         root_dir / "3-extraction" / "output.tex",
         root_dir / "3-extraction" / "output_raw.tex",
         root_dir / "3-extraction" / "input_extract.jsonl",
+        # Stage 4: Update
+        root_dir / "4-update" / "input_update.tex",
+        root_dir / "4-update" / "metadata_update.jsonl",
+        root_dir / "4-update" / "output_update.jsonl",
     ]
     
     img_dir = root_dir / "1-transcription" / "img"
@@ -70,13 +74,13 @@ def clear_files_and_dirs():
         except Exception as e:
             print(f"  ✗ Error clearing {file_path.relative_to(root_dir)}: {e}")
     
-    # Clear img directory
+    # Clear img directory (preserve .gitkeep)
     print("\nClearing img directory...")
     try:
         if img_dir.exists():
             deleted_count = 0
             for file_path in img_dir.glob("*"):
-                if file_path.is_file():
+                if file_path.is_file() and file_path.name != ".gitkeep":
                     file_path.unlink()
                     deleted_count += 1
             print(f"  ✓ Deleted {deleted_count} file(s) from {img_dir.relative_to(root_dir)}")
@@ -85,13 +89,13 @@ def clear_files_and_dirs():
     except Exception as e:
         print(f"  ✗ Error clearing directory: {e}")
     
-    # Clear keys directory
+    # Clear keys directory (preserve .gitkeep)
     print("\nClearing keys directory...")
     try:
         if keys_dir.exists():
             deleted_count = 0
             for file_path in keys_dir.glob("*"):
-                if file_path.is_file():
+                if file_path.is_file() and file_path.name != ".gitkeep":
                     file_path.unlink()
                     deleted_count += 1
             print(f"  ✓ Deleted {deleted_count} file(s) from {keys_dir.relative_to(root_dir)}")
@@ -106,7 +110,7 @@ def clear_files_and_dirs():
 def main():
     """Main entry point."""
     print("="*60)
-    print("CLEAR SCRIPT - Empty output files and img/keys directories")
+    print("CLEAR SCRIPT - Empty output files and working directories")
     print("="*60)
     print()
     
