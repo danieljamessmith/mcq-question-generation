@@ -16,6 +16,7 @@ and topics from it to populate the output. Otherwise, these fields are null/empt
 import re
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 
@@ -312,6 +313,7 @@ def merge_with_metadata(questions: list[dict], metadata: list[dict]) -> list[dic
             "id": meta.get("id"),  # null if not present
             "difficulty": meta.get("difficulty"),  # null if not present
             "answer_key": q["answer_key"],
+            "last_updated": date.today().isoformat(),  # current date in YYYY-MM-DD format
             "topics": meta.get("topics", []),  # empty list if not present
             "prompt": q["prompt"],
             "choices": q["choices"]
@@ -372,6 +374,9 @@ def main():
     input_tex = script_dir / "input_update.tex"
     metadata_jsonl = script_dir / "metadata_update.jsonl"
     output_jsonl = script_dir / "output_update.jsonl"
+    
+    # Clear output file first (so stale output doesn't persist if we error out)
+    output_jsonl.write_text("", encoding='utf-8')
     
     # Check input file
     print(f"Reading LaTeX: {input_tex.name}")
