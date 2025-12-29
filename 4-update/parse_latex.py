@@ -105,41 +105,83 @@ def parse_question_body(body: str, q_num: int = 0) -> tuple[str, list[str]]:
     r"""
     Parse question body into stem and choices.
     
-    Handles the tabular format including MULTI-LINE OPTIONS:
+    Handles TWO tabular formats:
+    
+    1. Simple 2-column format (standard choices):
         \begin{tabular}{@{}ll@{}}
-        \textbf{A} & first part of option \\
-                   & second part of option \\[9pt]
+        \textbf{A} & option content \\[9pt]
         \textbf{B} & another option \\[9pt]
         ...
         \end{tabular}
+    
+    2. Grid format (multi-column answer tables):
+        \begin{center}
+        \begin{tabular}{|c|c|c|c|}
+        \hline
+         & \textbf{Header 1} & \textbf{Header 2} & ... \\
+        \hline
+        \textbf{A} & val1 & val2 & val3 \\
+        \textbf{B} & val1 & val2 & val3 \\
+        ...
+        \end{tabular}
+        \end{center}
     """
-    # Find the tabular block containing options
-    tabular_pattern = re.compile(
+    # Try simple tabular format first (2-column @{}ll@{})
+    simple_pattern = re.compile(
         r'\\begin\{tabular\}\{@\{\}ll@\{\}\}\s*(.*?)\s*\\end\{tabular\}',
         re.DOTALL
     )
+    simple_match = simple_pattern.search(body)
     
-    tabular_match = tabular_pattern.search(body)
+    if simple_match:
+        # Everything before the tabular is the stem
+        stem = body[:simple_match.start()].strip()
+        tabular_content = simple_match.group(1)
+        
+        # Clean up stem - remove trailing whitespace and vspace commands
+        stem = re.sub(r'\\vspace\{[^}]*\}\s*$', '', stem).strip()
+        stem = re.sub(r'\\\\\[\d+pt\]\s*$', '', stem).strip()
+        
+        # Parse options using the simple tabular parser
+        choices = parse_tabular_choices(tabular_content, q_num)
+        
+        # Clean up stem (preserve array structure for I/II/III blocks)
+        stem = clean_latex_stem(stem)
+        
+        return stem, choices
     
-    if not tabular_match:
-        print(f"  [!] Warning Q{q_num}: Could not find tabular block")
-        return body.strip(), []
+    # Try grid tabular format (|c|c|...|c| with borders and headers)
+    # This format is wrapped in \begin{center}...\end{center}
+    grid_pattern = re.compile(
+        r'\\begin\{center\}\s*'
+        r'(?:\\renewcommand\{\\arraystretch\}\{[^}]+\}\s*)?'  # optional arraystretch
+        r'\\begin\{tabular\}\{\|c(?:\|c)+\|\}\s*'  # {|c|c|...|c|}
+        r'(.*?)'
+        r'\\end\{tabular\}\s*'
+        r'\\end\{center\}',
+        re.DOTALL
+    )
+    grid_match = grid_pattern.search(body)
     
-    # Everything before the tabular is the stem
-    stem = body[:tabular_match.start()].strip()
-    tabular_content = tabular_match.group(1)
+    if grid_match:
+        # Everything before \begin{center} is the stem
+        stem = body[:grid_match.start()].strip()
+        tabular_content = grid_match.group(1)
+        
+        # Clean up stem
+        stem = re.sub(r'\\vspace\{[^}]*\}\s*$', '', stem).strip()
+        stem = re.sub(r'\\\\\[\d+pt\]\s*$', '', stem).strip()
+        
+        # Parse options using the grid tabular parser
+        choices = parse_grid_tabular_choices(tabular_content, q_num)
+        
+        # Clean up stem
+        stem = clean_latex_stem(stem)
+        
+        return stem, choices
     
-    # Clean up stem - remove trailing whitespace and vspace commands
-    stem = re.sub(r'\\vspace\{[^}]*\}\s*$', '', stem).strip()
-    stem = re.sub(r'\\\\\[\d+pt\]\s*$', '', stem).strip()
-    
-    # Parse options using a smarter approach that handles multi-line choices
-    choices = parse_tabular_choices(tabular_content, q_num)
-    
-    # Clean up stem (preserve array structure for I/II/III blocks)
-    stem = clean_latex_stem(stem)
-    
-    return stem, choices
+    print(f"  [!] Warning Q{q_num}: Could not find tabular block (tried simple and grid formats)")
+    return body.strip(), []
 
 
 def parse_tabular_choices(tabular_content: str, q_num: int = 0) -> list[str]:
@@ -198,6 +240,61 @@ def parse_tabular_choices(tabular_content: str, q_num: int = 0) -> list[str]:
     duplicates = find_duplicates(normalized_choices)
     if duplicates:
         print(f"  [!] Warning Q{q_num}: Duplicate choices detected (possible truncation): {duplicates}")
+    
+    return choices
+
+
+def parse_grid_tabular_choices(tabular_content: str, q_num: int = 0) -> list[str]:
+    r"""
+    Parse choices from grid tabular content (multi-column answer tables).
+    
+    Grid format in LaTeX:
+        \hline
+         & \textbf{Header 1} & \textbf{Header 2} & \textbf{Header 3} \\
+        \hline
+        \textbf{A} & val1 & val2 & val3 \\
+        \textbf{B} & val1 & val2 & val3 \\
+        ...
+        \hline
+    
+    Output: Each row becomes a comma-separated choice string:
+        "val1, val2, val3"
+    """
+    # Normalize whitespace
+    content = re.sub(r'\s+', ' ', tabular_content).strip()
+    
+    # Remove \hline commands
+    content = re.sub(r'\\hline\s*', '', content)
+    
+    # Split into rows by \\ (row separator)
+    # Each row ends with \\ possibly followed by spacing like [2pt]
+    rows = re.split(r'\s*\\\\\s*(?:\[\d+pt\])?\s*', content)
+    rows = [r.strip() for r in rows if r.strip()]
+    
+    if not rows:
+        print(f"  [!] Warning Q{q_num}: No rows found in grid tabular")
+        return []
+    
+    # First row is the header (skip it - starts with & not \textbf{X})
+    # Data rows start with \textbf{A}, \textbf{B}, etc.
+    choices = []
+    
+    for row in rows:
+        # Check if this is a data row (starts with \textbf{X} &)
+        data_row_match = re.match(r'\\textbf\{([A-Z])\}\s*&\s*(.+)', row)
+        if data_row_match:
+            letter = data_row_match.group(1)
+            cell_content = data_row_match.group(2)
+            
+            # Split the remaining content by & to get individual cell values
+            cells = [c.strip() for c in cell_content.split('&')]
+            
+            # Join cells with comma separator for the choice string
+            choice_str = ', '.join(cells)
+            choices.append(choice_str)
+    
+    if not choices:
+        print(f"  [!] Warning Q{q_num}: No data rows found in grid tabular")
     
     return choices
 
