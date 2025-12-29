@@ -535,6 +535,23 @@ def main():
         has_id = "id" if q.get('id') else "no-id"
         has_topics = f"{len(q.get('topics', []))}t" if q.get('topics') else "0t"
         print(f"  Q{i+1}: {num_choices} choices, ans={q['answer_key']}, {has_id}, {has_topics}")
+    
+    # Ask if user wants to clear the input files
+    print("\n")
+    clear_response = input("Do you want to clear the input files (input_update.tex, metadata_update.jsonl)? (y/n): ").strip().lower()
+    
+    if clear_response == 'y':
+        files_to_clear = [input_tex, metadata_jsonl]
+        for file_path in files_to_clear:
+            try:
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    pass  # Empty the file
+                print(f"✓ Cleared {file_path.name}")
+            except Exception as e:
+                print(f"✗ Error clearing {file_path.name}: {e}")
+    else:
+        print("Input files were not cleared.")
 
 
 if __name__ == "__main__":

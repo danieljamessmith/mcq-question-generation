@@ -2,8 +2,15 @@ import os
 import json
 import base64
 import time
+import sys
 from pathlib import Path
+
+# Add parent directory to path for shared imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from openai import OpenAI
+from spinner import Spinner
+from cost_report import calculate_cost, format_params, print_full_cost_report, print_summary_cost_report
 
 # Initialize OpenAI API
 API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -13,15 +20,6 @@ client = OpenAI(api_key=API_KEY)
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
-
-# Load pricing from external file
-def load_pricing():
-    """Load model pricing from external JSON file."""
-    with open(PRICING_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-PRICING = load_pricing()
 
 # API Configuration
 API_CONFIG = {
@@ -86,30 +84,31 @@ def fill_answer_keys(questions, image_path, prompt_text):
     # Construct the full prompt
     full_prompt = f"{prompt_text}\n\n---===---\n\nINPUT JSONL:\n\n{questions_jsonl}"
     
-    # Call OpenAI Vision API
-    response = client.chat.completions.create(
-        model=API_CONFIG["model"],
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": full_prompt
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:{media_type};base64,{base64_image}"
+    # Call OpenAI Vision API with spinner
+    with Spinner("Filling answer keys"):
+        response = client.chat.completions.create(
+            model=API_CONFIG["model"],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": full_prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{media_type};base64,{base64_image}"
+                            }
                         }
-                    }
-                ]
-            }
-        ],
-        reasoning_effort=API_CONFIG["reasoning_effort"],
-        max_completion_tokens=API_CONFIG["max_completion_tokens"],
-        response_format={"type": "json_object"},
-    )
+                    ]
+                }
+            ],
+            reasoning_effort=API_CONFIG["reasoning_effort"],
+            max_completion_tokens=API_CONFIG["max_completion_tokens"],
+            response_format={"type": "json_object"},
+        )
     
     # Calculate elapsed time
     elapsed_time = time.time() - start_time
@@ -123,29 +122,24 @@ def fill_answer_keys(questions, image_path, prompt_text):
     if hasattr(response, 'usage'):
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        print(f"  Token usage - Input: {input_tokens:,}, Output: {output_tokens:,}, Time: {elapsed_time:.2f}s")
     
-    print(f"✓ Response received successfully")
+    print(f"✓ Response received ({elapsed_time:.1f}s)")
     
-    return result, input_tokens, output_tokens
+    return result, input_tokens, output_tokens, elapsed_time
 
 
 def main():
     """Main function to fill answer keys from answer key images."""
     # Print configuration summary
-    model_pricing = PRICING["models"][API_CONFIG["model"]]
     print("=" * 50)
-    print(f"API CONFIG: model={API_CONFIG['model']} | reasoning={API_CONFIG['reasoning_effort']} | max_tokens={API_CONFIG['max_completion_tokens']}")
-    print(f"PRICING: ${model_pricing['input_cost_per_million']:.2f}/M input, ${model_pricing['output_cost_per_million']:.2f}/M output")
-    print(f"Pricing last updated: {PRICING.get('last_updated', 'unknown')}")
+    print(f"API CONFIG: model={API_CONFIG['model']} | {format_params(API_CONFIG)}")
     print("=" * 50)
     
     # Start overall timing
     script_start_time = time.time()
     
-    # Initialize token tracking
-    total_input_tokens = 0
-    total_output_tokens = 0
+    # Track all API calls for cost reporting
+    api_calls = []
     
     # Load prompt
     print("Loading prompt...")
@@ -200,13 +194,22 @@ def main():
                     time.sleep(2)  # Brief delay before retry
                 
                 # Fill answer keys using the image
-                result, input_tokens, output_tokens = fill_answer_keys(
+                result, input_tokens, output_tokens, elapsed_time = fill_answer_keys(
                     questions, image_path, prompt_text
                 )
                 
-                # Track token usage
-                total_input_tokens += input_tokens
-                total_output_tokens += output_tokens
+                # Track API call
+                cost = calculate_cost(API_CONFIG["model"], input_tokens, output_tokens)
+                api_calls.append({
+                    "stage": "FillKeys",
+                    "api_call": f"FillKeys-{idx}",
+                    "model": API_CONFIG["model"],
+                    "params": format_params(API_CONFIG),
+                    "time": elapsed_time,
+                    "cost": cost,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens
+                })
                 
                 # Check for empty response
                 if not result or not result.strip():
@@ -270,32 +273,24 @@ def main():
     
     print(f"✓ Successfully saved {len(questions)} question(s)")
     
-    # Calculate total elapsed time
+    # Calculate totals
     script_elapsed_time = time.time() - script_start_time
+    total_cost = sum(call['cost'] for call in api_calls)
     
-    # Print token usage and cost summary
-    print("\n" + "="*60)
-    print("SUMMARY")
-    print("="*60)
-    print(f"Total input tokens:  {total_input_tokens:,}")
-    print(f"Total output tokens: {total_output_tokens:,}")
-    print(f"Total tokens:        {total_input_tokens + total_output_tokens:,}")
-    print(f"Total elapsed time:  {script_elapsed_time:.2f}s")
-    print("-"*60)
+    # Build stage summary (single stage for fill_keys)
+    stage_summary = {}
+    if api_calls:
+        stage_summary["FillKeys"] = {
+            "time": sum(call['time'] for call in api_calls),
+            "model": API_CONFIG["model"],
+            "cost": total_cost
+        }
     
-    # Calculate costs using pricing from JSON
-    model_pricing = PRICING["models"][API_CONFIG["model"]]
-    input_rate = model_pricing["input_cost_per_million"] / 1_000_000
-    output_rate = model_pricing["output_cost_per_million"] / 1_000_000
-    input_cost = total_input_tokens * input_rate
-    output_cost = total_output_tokens * output_rate
-    total_cost = input_cost + output_cost
+    # Print full cost report (detailed table of all API calls)
+    print_full_cost_report(api_calls, total_cost)
     
-    print(f"Model: {API_CONFIG['model']}")
-    print(f"Input cost:  ${input_cost:.4f} (${model_pricing['input_cost_per_million']:.2f}/M tokens)")
-    print(f"Output cost: ${output_cost:.4f} (${model_pricing['output_cost_per_million']:.2f}/M tokens)")
-    print(f"Total cost:  ${total_cost:.4f}")
-    print("="*60)
+    # Print summary cost report (compact table by stage) - FINAL report before prompt
+    print_summary_cost_report(stage_summary, script_elapsed_time, total_cost)
     
     # Ask if user wants to clear the /keys directory
     print("\n")
@@ -318,4 +313,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

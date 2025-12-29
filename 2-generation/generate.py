@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openai import OpenAI
 from spinner import Spinner
+from cost_report import calculate_cost, format_params, print_full_cost_report, print_summary_cost_report
 
 # Initialize OpenAI API
 API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -19,16 +20,7 @@ client = OpenAI(api_key=API_KEY)
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
 LEVEL_INSTRUCTIONS_FILE = SCRIPT_DIR.parent / "level_instructions.txt"
-
-# Load pricing from external file
-def load_pricing():
-    """Load model pricing from external JSON file."""
-    with open(PRICING_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-PRICING = load_pricing()
 
 # Stage-specific configurations (each stage can use a different model)
 GENERATOR_CONFIG = {
@@ -186,10 +178,9 @@ def generate_questions(examples, prompt_text, spec_text="", level_text="", speci
     if hasattr(response, 'usage'):
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        print(f"✓ Generation complete")
-        print(f"  Token usage - Input: {input_tokens:,}, Output: {output_tokens:,}, Time: {elapsed_time:.2f}s")
+        print(f"✓ Generation complete ({elapsed_time:.1f}s)")
     
-    return result, input_tokens, output_tokens
+    return result, input_tokens, output_tokens, elapsed_time
 
 
 def correct_questions(questions, corrector_prompt_text, spec_text="", level_text=""):
@@ -249,10 +240,9 @@ def correct_questions(questions, corrector_prompt_text, spec_text="", level_text
     if hasattr(response, 'usage'):
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        print(f"✓ Correction complete")
-        print(f"  Token usage - Input: {input_tokens:,}, Output: {output_tokens:,}, Time: {elapsed_time:.2f}s")
+        print(f"✓ Correction complete ({elapsed_time:.1f}s)")
     
-    return result, input_tokens, output_tokens
+    return result, input_tokens, output_tokens, elapsed_time
 
 
 def validate_question(question, critic_prompt_text, level_text=""):
@@ -306,7 +296,6 @@ def validate_question(question, critic_prompt_text, level_text=""):
     if hasattr(response, 'usage'):
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        print(f"  Token usage - Input: {input_tokens:,}, Output: {output_tokens:,}, Time: {elapsed_time:.2f}s")
     
     try:
         evaluation = json.loads(result)
@@ -315,202 +304,27 @@ def validate_question(question, critic_prompt_text, level_text=""):
         print(f"  DEBUG: Raw response content (first 500 chars): {result[:500]}")
         raise
     
-    return evaluation, input_tokens, output_tokens
-
-
-def get_model_pricing(model_name):
-    """Get pricing for a specific model from the loaded pricing data."""
-    if model_name in PRICING["models"]:
-        p = PRICING["models"][model_name]
-        return p["input_cost_per_million"] / 1_000_000, p["output_cost_per_million"] / 1_000_000
-    raise ValueError(f"Unknown model: {model_name}. Add it to openai_pricing.json")
-
-
-def render_bar(value, total, width=30, fill_char="█", empty_char="░"):
-    """Render a horizontal ASCII bar showing a proportion."""
-    if total == 0:
-        return empty_char * width
-    proportion = value / total
-    filled = int(proportion * width)
-    return fill_char * filled + empty_char * (width - filled)
-
-
-def print_cost_breakdown(stage_usage, token_usage, total_elapsed_time):
-    """Print a detailed cost breakdown report with ASCII visualizations."""
-    
-    # Calculate per-stage costs
-    stage_costs = {}
-    stage_details = {}
-    for stage_name, usage in stage_usage.items():
-        model = usage["model"]
-        input_rate, output_rate = get_model_pricing(model)
-        input_cost = usage["input"] * input_rate
-        output_cost = usage["output"] * output_rate
-        stage_costs[stage_name] = input_cost + output_cost
-        stage_details[stage_name] = {
-            "model": model,
-            "input_tokens": usage["input"],
-            "output_tokens": usage["output"],
-            "input_cost": input_cost,
-            "output_cost": output_cost,
-            "total_cost": input_cost + output_cost
-        }
-    
-    # Calculate per-model costs (input vs output breakdown)
-    model_costs = {}
-    total_input_cost = 0
-    total_output_cost = 0
-    for model, usage in token_usage.items():
-        input_rate, output_rate = get_model_pricing(model)
-        input_cost = usage["input"] * input_rate
-        output_cost = usage["output"] * output_rate
-        model_costs[model] = {
-            "input_tokens": usage["input"],
-            "output_tokens": usage["output"],
-            "input_cost": input_cost,
-            "output_cost": output_cost,
-            "total_cost": input_cost + output_cost
-        }
-        total_input_cost += input_cost
-        total_output_cost += output_cost
-    
-    total_cost = total_input_cost + total_output_cost
-    total_input_tokens = sum(u["input"] for u in token_usage.values())
-    total_output_tokens = sum(u["output"] for u in token_usage.values())
-    
-    # Print header
-    print("\n" + "=" * 70)
-    print("                          COST BREAKDOWN REPORT")
-    print("=" * 70)
-    
-    # Section 1: Overall Summary
-    validated_count = stage_usage.get("3_Validation", {}).get("questions_count", 1)
-    validated_count = max(validated_count, 1)  # Avoid division by zero
-    
-    print("\n┌─ OVERALL SUMMARY ─────────────────────────────────────────────────┐")
-    print(f"│  Total Cost:         ${total_cost:.4f}")
-    print(f"│  Total Tokens:       {total_input_tokens + total_output_tokens:,} ({total_input_tokens:,} in + {total_output_tokens:,} out)")
-    print(f"│  Elapsed Time:       {total_elapsed_time:.2f}s")
-    print(f"│  Cost per Question:  ${total_cost / validated_count:.4f} (per validated question)")
-    print("└───────────────────────────────────────────────────────────────────┘")
-    
-    # Section 2: Cost by Pipeline Stage
-    print("\n┌─ COST BY PIPELINE STAGE ─────────────────────────────────────────┐")
-    print("│")
-    
-    stage_order = ["1_Generation", "2_Correction", "3_Validation"]
-    stage_labels = {
-        "1_Generation": "Stage 1: Generation",
-        "2_Correction": "Stage 2: Correction", 
-        "3_Validation": "Stage 3: Validation"
-    }
-    
-    for stage_name in stage_order:
-        if stage_name in stage_details:
-            details = stage_details[stage_name]
-            pct = (details["total_cost"] / total_cost * 100) if total_cost > 0 else 0
-            bar = render_bar(details["total_cost"], total_cost, width=25)
-            label = stage_labels.get(stage_name, stage_name)
-            
-            print(f"│  {label}")
-            print(f"│    {bar} ${details['total_cost']:.4f} ({pct:5.1f}%)")
-            print(f"│    └─ {details['input_tokens']:,} in (${details['input_cost']:.4f}) + {details['output_tokens']:,} out (${details['output_cost']:.4f})")
-            print(f"│    └─ Model: {details['model']}")
-            print("│")
-    
-    print("└───────────────────────────────────────────────────────────────────┘")
-    
-    # Section 3: Input vs Output Token Cost
-    print("\n┌─ INPUT vs OUTPUT TOKEN COST ─────────────────────────────────────┐")
-    print("│")
-    
-    input_pct = (total_input_cost / total_cost * 100) if total_cost > 0 else 0
-    output_pct = (total_output_cost / total_cost * 100) if total_cost > 0 else 0
-    
-    input_bar = render_bar(total_input_cost, total_cost, width=25, fill_char="▓")
-    output_bar = render_bar(total_output_cost, total_cost, width=25, fill_char="█")
-    
-    print(f"│  Input Tokens  ({total_input_tokens:,})")
-    print(f"│    {input_bar} ${total_input_cost:.4f} ({input_pct:5.1f}%)")
-    print("│")
-    print(f"│  Output Tokens ({total_output_tokens:,})")
-    print(f"│    {output_bar} ${total_output_cost:.4f} ({output_pct:5.1f}%)")
-    print("│")
-    
-    # Show the ratio insight
-    if total_input_tokens > 0:
-        output_input_ratio = total_output_tokens / total_input_tokens
-        cost_per_input = (total_input_cost / total_input_tokens * 1000) if total_input_tokens > 0 else 0
-        cost_per_output = (total_output_cost / total_output_tokens * 1000) if total_output_tokens > 0 else 0
-        print(f"│  ℹ Output/Input ratio: {output_input_ratio:.2f}x tokens, but output costs {output_pct/max(input_pct, 0.01):.1f}x more")
-        print(f"│  ℹ Effective rate: ${cost_per_input:.4f}/1K input, ${cost_per_output:.4f}/1K output")
-    
-    print("│")
-    print("└───────────────────────────────────────────────────────────────────┘")
-    
-    # Section 4: Per-Model Summary (if multiple models used)
-    if len(model_costs) > 1:
-        print("\n┌─ COST BY MODEL ───────────────────────────────────────────────────┐")
-        print("│")
-        for model, costs in sorted(model_costs.items(), key=lambda x: -x[1]["total_cost"]):
-            pct = (costs["total_cost"] / total_cost * 100) if total_cost > 0 else 0
-            bar = render_bar(costs["total_cost"], total_cost, width=25)
-            print(f"│  {model}")
-            print(f"│    {bar} ${costs['total_cost']:.4f} ({pct:5.1f}%)")
-            print("│")
-        print("└───────────────────────────────────────────────────────────────────┘")
-    else:
-        # Single model - just show a simple line
-        model = list(model_costs.keys())[0]
-        print(f"\n  Single model used: {model} (100% of cost)")
-    
-    # Section 5: Cost Efficiency Insights
-    print("\n┌─ EFFICIENCY INSIGHTS ─────────────────────────────────────────────┐")
-    
-    # Find most expensive stage
-    if stage_costs:
-        most_expensive_stage = max(stage_costs.items(), key=lambda x: x[1])
-        stage_label = stage_labels.get(most_expensive_stage[0], most_expensive_stage[0])
-        pct = (most_expensive_stage[1] / total_cost * 100) if total_cost > 0 else 0
-        print(f"│  💰 Most expensive stage: {stage_label} (${most_expensive_stage[1]:.4f}, {pct:.1f}%)")
-    
-    # Tokens per second
-    if total_elapsed_time > 0:
-        tokens_per_sec = (total_input_tokens + total_output_tokens) / total_elapsed_time
-        print(f"│  ⚡ Processing speed: {tokens_per_sec:.1f} tokens/sec")
-    
-    # Cost per minute
-    if total_elapsed_time > 0:
-        cost_per_min = total_cost / (total_elapsed_time / 60)
-        print(f"│  📊 Cost rate: ${cost_per_min:.4f}/min")
-    
-    print("└───────────────────────────────────────────────────────────────────┘")
-    print("=" * 70)
+    return evaluation, input_tokens, output_tokens, elapsed_time
 
 
 def main():
     """Main function to generate, correct, and validate questions."""
-    # Print configuration summary
+    # Print configuration summary (without token rates)
     print("=" * 60)
     print("API CONFIG (per-stage model selection)")
-    gen_p = PRICING["models"][GENERATOR_CONFIG["model"]]
-    cor_p = PRICING["models"][CORRECTOR_CONFIG["model"]]
-    val_p = PRICING["models"][VALIDATOR_CONFIG["model"]]
-    print(f"  Stage 1 Generator:  {GENERATOR_CONFIG['model']} | reasoning={GENERATOR_CONFIG['reasoning_effort']:6} | max_tokens={GENERATOR_CONFIG['max_completion_tokens']} | temp={GENERATOR_CONFIG['temperature']}")
-    print(f"                      Pricing: ${gen_p['input_cost_per_million']:.2f}/M in, ${gen_p['output_cost_per_million']:.2f}/M out")
-    print(f"  Stage 2 Corrector:  {CORRECTOR_CONFIG['model']} | reasoning={CORRECTOR_CONFIG['reasoning_effort']:6} | max_tokens={CORRECTOR_CONFIG['max_completion_tokens']}")
-    print(f"                      Pricing: ${cor_p['input_cost_per_million']:.2f}/M in, ${cor_p['output_cost_per_million']:.2f}/M out")
-    print(f"  Stage 3 Validator:  {VALIDATOR_CONFIG['model']} | reasoning={VALIDATOR_CONFIG['reasoning_effort']:6} | max_tokens={VALIDATOR_CONFIG['max_completion_tokens']}")
-    print(f"                      Pricing: ${val_p['input_cost_per_million']:.2f}/M in, ${val_p['output_cost_per_million']:.2f}/M out")
-    print(f"Pricing last updated: {PRICING.get('last_updated', 'unknown')}")
+    print(f"  Stage 1 Generator:  {GENERATOR_CONFIG['model']} | {format_params(GENERATOR_CONFIG)}")
+    print(f"  Stage 2 Corrector:  {CORRECTOR_CONFIG['model']} | {format_params(CORRECTOR_CONFIG)}")
+    print(f"  Stage 3 Validator:  {VALIDATOR_CONFIG['model']} | {format_params(VALIDATOR_CONFIG)}")
     print("=" * 60)
     
     # Start overall timing
     script_start_time = time.time()
     
-    # Initialize per-model and per-stage token tracking
-    token_usage = {}  # {model_name: {"input": count, "output": count}}
-    stage_usage = {}  # {stage_name: {"model": name, "input": count, "output": count}}
+    # Track all API calls for full cost report
+    api_calls = []  # List of dicts with all call details
+    
+    # Track stage summaries for summary cost report
+    stage_summary = {}  # {stage_name: {time, model, cost}}
     
     # Empty all output files at the start
     print("\nEmptying output files...")
@@ -519,6 +333,9 @@ def main():
     print("\nLoading prompts and examples...")
     
     # Load prompts
+    if not PROMPT_FILE.exists():
+        print(f"Error: {PROMPT_FILE} not found")
+        return
     prompt_text = load_text_file(PROMPT_FILE)
     
     if not CORRECTOR_PROMPT_FILE.exists():
@@ -587,26 +404,32 @@ def main():
     
     print(f"Loaded {len(examples)} example question(s)")
     
-    # Helper to track tokens per model and per stage
-    def track_tokens(model, input_tok, output_tok, stage_name=None):
-        # Track per-model
-        if model not in token_usage:
-            token_usage[model] = {"input": 0, "output": 0}
-        token_usage[model]["input"] += input_tok
-        token_usage[model]["output"] += output_tok
-        
-        # Track per-stage
-        if stage_name:
-            if stage_name not in stage_usage:
-                stage_usage[stage_name] = {"model": model, "input": 0, "output": 0}
-            stage_usage[stage_name]["input"] += input_tok
-            stage_usage[stage_name]["output"] += output_tok
-    
     # ========== STAGE 1: GENERATION ==========
     try:
-        result, input_tokens, output_tokens = generate_questions(examples, prompt_text, spec_text, level_text, special_prompt, blacklist_text)
+        result, input_tokens, output_tokens, elapsed_time = generate_questions(
+            examples, prompt_text, spec_text, level_text, special_prompt, blacklist_text
+        )
         
-        track_tokens(GENERATOR_CONFIG["model"], input_tokens, output_tokens, "1_Generation")
+        cost = calculate_cost(GENERATOR_CONFIG["model"], input_tokens, output_tokens)
+        
+        # Track API call
+        api_calls.append({
+            "stage": "Generate",
+            "api_call": "Generate-1",
+            "model": GENERATOR_CONFIG["model"],
+            "params": format_params(GENERATOR_CONFIG),
+            "time": elapsed_time,
+            "cost": cost,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens
+        })
+        
+        # Track stage summary
+        stage_summary["Generate"] = {
+            "time": elapsed_time,
+            "model": GENERATOR_CONFIG["model"],
+            "cost": cost
+        }
         
         # Parse the JSON response
         response_obj = json.loads(result)
@@ -641,11 +464,30 @@ def main():
     
     # ========== STAGE 2: CORRECTION ==========
     try:
-        result, input_tokens, output_tokens = correct_questions(
+        result, input_tokens, output_tokens, elapsed_time = correct_questions(
             generated_questions, corrector_prompt_text, spec_text, level_text
         )
         
-        track_tokens(CORRECTOR_CONFIG["model"], input_tokens, output_tokens, "2_Correction")
+        cost = calculate_cost(CORRECTOR_CONFIG["model"], input_tokens, output_tokens)
+        
+        # Track API call
+        api_calls.append({
+            "stage": "Correct",
+            "api_call": "Correct-1",
+            "model": CORRECTOR_CONFIG["model"],
+            "params": format_params(CORRECTOR_CONFIG),
+            "time": elapsed_time,
+            "cost": cost,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens
+        })
+        
+        # Track stage summary
+        stage_summary["Correct"] = {
+            "time": elapsed_time,
+            "model": CORRECTOR_CONFIG["model"],
+            "cost": cost
+        }
         
         # Parse the JSON response
         response_obj = json.loads(result)
@@ -681,6 +523,8 @@ def main():
     # ========== STAGE 3: VALIDATION ==========
     print(f"\n--- Stage 3: Validation Pass ---")
     validated_questions = []
+    validation_total_time = 0
+    validation_total_cost = 0
     
     # Add 'valid' field as the first key in each question
     for i, question in enumerate(corrected_questions):
@@ -694,27 +538,38 @@ def main():
             time.sleep(1)
         
         try:
-            evaluation, input_tokens, output_tokens = validate_question(
+            evaluation, input_tokens, output_tokens, elapsed_time = validate_question(
                 question, critic_prompt_text, level_text
             )
             
-            track_tokens(VALIDATOR_CONFIG["model"], input_tokens, output_tokens, "3_Validation")
+            cost = calculate_cost(VALIDATOR_CONFIG["model"], input_tokens, output_tokens)
+            validation_total_time += elapsed_time
+            validation_total_cost += cost
+            
+            # Track API call
+            api_calls.append({
+                "stage": "Validate",
+                "api_call": f"Validate-{i}",
+                "model": VALIDATOR_CONFIG["model"],
+                "params": format_params(VALIDATOR_CONFIG),
+                "time": elapsed_time,
+                "cost": cost,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens
+            })
             
             well_posed = evaluation.get("well_posed", False)
             answer_correct = evaluation.get("answer_correct", False)
             overall_pass = evaluation.get("overall_pass", False)
             reasoning = evaluation.get("reasoning", "No reasoning provided")
             
-            print(f"  Well-posed: {well_posed}")
-            print(f"  Answer correct: {answer_correct}")
-            print(f"  Overall: {'[PASSED]' if overall_pass else '[FAILED]'}")
+            print(f"  Well-posed: {well_posed}, Answer correct: {answer_correct}, Overall: {'[PASSED]' if overall_pass else '[FAILED]'} ({elapsed_time:.1f}s)")
             
             # Update the valid field
             question["valid"] = overall_pass
             
             if not overall_pass:
-                print(f"  Full validation reasoning:")
-                print(f"  {reasoning}")
+                print(f"  Reasoning: {reasoning}")
             
             if overall_pass:
                 validated_questions.append(question)
@@ -727,6 +582,13 @@ def main():
             print(f"  Question skipped")
             print(f"  DEBUG: Question that failed validation:")
             print(f"  {json.dumps(question, indent=2, ensure_ascii=False)[:300]}...")
+    
+    # Track validation stage summary
+    stage_summary["Validate"] = {
+        "time": validation_total_time,
+        "model": VALIDATOR_CONFIG["model"],
+        "cost": validation_total_cost
+    }
     
     print(f"\n--- Validation Complete ---")
     print(f"Passed: {len(validated_questions)}/{len(corrected_questions)} questions")
@@ -742,15 +604,15 @@ def main():
             difficulty = q.get("difficulty", "N/A")
             print(f"  {i}. Difficulty: {difficulty}, Topics: {', '.join(topics)}")
     
-    # Calculate total elapsed time
+    # Calculate totals
     script_elapsed_time = time.time() - script_start_time
+    total_cost = sum(call['cost'] for call in api_calls)
     
-    # Store validated questions count for cost-per-question calculation
-    if "3_Validation" in stage_usage:
-        stage_usage["3_Validation"]["questions_count"] = len(validated_questions) if validated_questions else 1
+    # Print full cost report (detailed table of all API calls)
+    print_full_cost_report(api_calls, total_cost)
     
-    # Print detailed cost breakdown report
-    print_cost_breakdown(stage_usage, token_usage, script_elapsed_time)
+    # Print summary cost report (compact table by stage) - this is the FINAL report before prompt
+    print_summary_cost_report(stage_summary, script_elapsed_time, total_cost)
     
     # Ask if user wants to clear the input.jsonl file
     print("\n")

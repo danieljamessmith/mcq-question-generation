@@ -2,7 +2,6 @@ import os
 import json
 import base64
 import time
-import shutil
 import sys
 from pathlib import Path
 
@@ -11,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openai import OpenAI
 from spinner import Spinner
+from cost_report import calculate_cost, format_params, print_full_cost_report, print_summary_cost_report
 
 # Initialize OpenAI API
 API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -20,15 +20,6 @@ client = OpenAI(api_key=API_KEY)
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
-
-# Load pricing from external file
-def load_pricing():
-    """Load model pricing from external JSON file."""
-    with open(PRICING_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-PRICING = load_pricing()
 
 # API Configuration
 API_CONFIG = {
@@ -113,29 +104,24 @@ def transcribe_image(image_path, prompt_text, template_text, special_prompt="", 
     if hasattr(response, 'usage'):
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        print(f"  Token usage - Input: {input_tokens}, Output: {output_tokens}, Time: {elapsed_time:.2f}s")
     
-    print(f"✓ Response received successfully")
+    print(f"✓ Response received ({elapsed_time:.1f}s)")
     
-    return result, input_tokens, output_tokens
+    return result, input_tokens, output_tokens, elapsed_time
 
 
 def main():
     """Main function to process all images."""
     # Print configuration summary
-    model_pricing = PRICING["models"][API_CONFIG["model"]]
     print("=" * 50)
-    print(f"API CONFIG: model={API_CONFIG['model']} | reasoning={API_CONFIG['reasoning_effort']} | max_tokens={API_CONFIG['max_completion_tokens']}")
-    print(f"PRICING: ${model_pricing['input_cost_per_million']:.2f}/M input, ${model_pricing['output_cost_per_million']:.2f}/M output")
-    print(f"Pricing last updated: {PRICING.get('last_updated', 'unknown')}")
+    print(f"API CONFIG: model={API_CONFIG['model']} | {format_params(API_CONFIG)}")
     print("=" * 50)
     
     # Start overall timing
     script_start_time = time.time()
     
-    # Initialize token tracking
-    total_input_tokens = 0
-    total_output_tokens = 0
+    # Track all API calls for cost reporting
+    api_calls = []
     
     # Parse command-line arguments for special prompt
     special_prompt = ""
@@ -151,6 +137,12 @@ def main():
     
     # Load prompt and template
     print("Loading prompt and template...")
+    if not PROMPT_FILE.exists():
+        print(f"Error: {PROMPT_FILE} not found")
+        return
+    if not TEMPLATE_FILE.exists():
+        print(f"Error: {TEMPLATE_FILE} not found")
+        return
     prompt_text = load_text_file(PROMPT_FILE)
     template_text = load_text_file(TEMPLATE_FILE)
     
@@ -178,11 +170,22 @@ def main():
                     time.sleep(2)  # Brief delay before retry
                 
                 # Transcribe the image
-                result, input_tokens, output_tokens = transcribe_image(image_path, prompt_text, template_text, special_prompt)
+                result, input_tokens, output_tokens, elapsed_time = transcribe_image(
+                    image_path, prompt_text, template_text, special_prompt
+                )
                 
-                # Track token usage
-                total_input_tokens += input_tokens
-                total_output_tokens += output_tokens
+                # Track API call
+                cost = calculate_cost(API_CONFIG["model"], input_tokens, output_tokens)
+                api_calls.append({
+                    "stage": "Transcribe",
+                    "api_call": f"Transcribe-{idx}",
+                    "model": API_CONFIG["model"],
+                    "params": format_params(API_CONFIG),
+                    "time": elapsed_time,
+                    "cost": cost,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens
+                })
                 
                 # Check for empty response
                 if not result or not result.strip():
@@ -240,34 +243,26 @@ def main():
             with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
                 f.write(f"{{\"error\": \"Invalid JSON\", \"image\": \"{image_path.name}\", \"raw_response\": {json.dumps(result[:500])}}}\n")
     
-    # Calculate total elapsed time
+    # Calculate totals
     script_elapsed_time = time.time() - script_start_time
+    total_cost = sum(call['cost'] for call in api_calls)
     
     print(f"\n✓ All done! Results saved to {OUTPUT_FILE}")
     
-    # Print token usage and cost summary
-    print("\n" + "="*60)
-    print("SUMMARY")
-    print("="*60)
-    print(f"Total input tokens:  {total_input_tokens:,}")
-    print(f"Total output tokens: {total_output_tokens:,}")
-    print(f"Total tokens:        {total_input_tokens + total_output_tokens:,}")
-    print(f"Total elapsed time:  {script_elapsed_time:.2f}s")
-    print("-"*60)
+    # Build stage summary (single stage for transcribe)
+    stage_summary = {}
+    if api_calls:
+        stage_summary["Transcribe"] = {
+            "time": sum(call['time'] for call in api_calls),
+            "model": API_CONFIG["model"],
+            "cost": total_cost
+        }
     
-    # Calculate costs using pricing from JSON
-    model_pricing = PRICING["models"][API_CONFIG["model"]]
-    input_rate = model_pricing["input_cost_per_million"] / 1_000_000
-    output_rate = model_pricing["output_cost_per_million"] / 1_000_000
-    input_cost = total_input_tokens * input_rate
-    output_cost = total_output_tokens * output_rate
-    total_cost = input_cost + output_cost
+    # Print full cost report (detailed table of all API calls)
+    print_full_cost_report(api_calls, total_cost)
     
-    print(f"Model: {API_CONFIG['model']}")
-    print(f"Input cost:  ${input_cost:.4f} (${model_pricing['input_cost_per_million']:.2f}/M tokens)")
-    print(f"Output cost: ${output_cost:.4f} (${model_pricing['output_cost_per_million']:.2f}/M tokens)")
-    print(f"Total cost:  ${total_cost:.4f}")
-    print("="*60)
+    # Print summary cost report (compact table by stage) - FINAL report before prompt
+    print_summary_cost_report(stage_summary, script_elapsed_time, total_cost)
     
     # Ask if user wants to clear the /img directory
     print("\n")
