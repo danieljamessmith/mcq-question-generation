@@ -1,11 +1,6 @@
 ---===---===---
-TMUA SPECIFICATION TO FOLLOW
+SPECIFICATION TO FOLLOW
 ---===---===---
-
-© UAT-UK 2024
-TEST OF MATHEMATICS FOR UNIVERSITY ADMISSION (TMUA)
-Content Specification
-For assessment in October 2024 and January 2025
 
 Structure of the Test
 The test consists of two 75-minute papers, taken one after the other.

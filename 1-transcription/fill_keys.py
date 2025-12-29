@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openai import OpenAI
 from spinner import Spinner
+from cost_report import calculate_cost, format_params, print_full_cost_report, print_summary_cost_report
 
 # Initialize OpenAI API
 API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -19,15 +20,6 @@ client = OpenAI(api_key=API_KEY)
 
 # Get script directory
 SCRIPT_DIR = Path(__file__).parent
-PRICING_FILE = SCRIPT_DIR.parent / "openai_pricing.json"
-
-# Load pricing from external file
-def load_pricing():
-    """Load model pricing from external JSON file."""
-    with open(PRICING_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-PRICING = load_pricing()
 
 # API Configuration
 API_CONFIG = {
@@ -75,125 +67,6 @@ def get_image_media_type(image_path):
         ".webp": "image/webp"
     }
     return media_types.get(ext, "image/png")
-
-
-def get_model_pricing(model_name):
-    """Get pricing for a specific model from the loaded pricing data."""
-    if model_name in PRICING["models"]:
-        p = PRICING["models"][model_name]
-        return p["input_cost_per_million"] / 1_000_000, p["output_cost_per_million"] / 1_000_000
-    raise ValueError(f"Unknown model: {model_name}. Add it to openai_pricing.json")
-
-
-def calculate_cost(model, input_tokens, output_tokens):
-    """Calculate cost for an API call."""
-    input_rate, output_rate = get_model_pricing(model)
-    return input_tokens * input_rate + output_tokens * output_rate
-
-
-def format_params(config):
-    """Format config params for display (reasoning_effort, temperature if non-default)."""
-    parts = [f"r={config.get('reasoning_effort', 'N/A')}"]
-    if 'temperature' in config and config['temperature'] != 1.0:
-        parts.append(f"t={config['temperature']}")
-    return ", ".join(parts)
-
-
-def print_full_cost_report(api_calls, total_cost):
-    """Print detailed ASCII table of all individual API calls."""
-    if not api_calls:
-        return
-    
-    print("\n" + "=" * 120)
-    print("                                           FULL COST REPORT (All API Calls)")
-    print("=" * 120)
-    
-    # Column headers
-    headers = ["Stage", "API-Call", "Model", "Params", "Time", "Cost", "Cost%", "In-Tokens", "Out-Tokens"]
-    
-    # Calculate column widths
-    col_widths = [12, 14, 12, 16, 8, 10, 7, 12, 12]
-    
-    # Print header row
-    header_row = "│"
-    for header, width in zip(headers, col_widths):
-        header_row += f" {header:^{width}} │"
-    
-    separator = "├" + "┼".join(["─" * (w + 2) for w in col_widths]) + "┤"
-    top_border = "┌" + "┬".join(["─" * (w + 2) for w in col_widths]) + "┐"
-    bottom_border = "└" + "┴".join(["─" * (w + 2) for w in col_widths]) + "┘"
-    
-    print(top_border)
-    print(header_row)
-    print(separator)
-    
-    # Print data rows
-    for call in api_calls:
-        cost_pct = (call['cost'] / total_cost * 100) if total_cost > 0 else 0
-        row = "│"
-        row += f" {call['stage']:<{col_widths[0]}} │"
-        row += f" {call['api_call']:<{col_widths[1]}} │"
-        row += f" {call['model']:<{col_widths[2]}} │"
-        row += f" {call['params']:<{col_widths[3]}} │"
-        row += f" {call['time']:>{col_widths[4]}.1f}s │"
-        row += f" ${call['cost']:>{col_widths[5]-1}.4f} │"
-        row += f" {cost_pct:>{col_widths[6]-1}.1f}% │"
-        row += f" {call['input_tokens']:>{col_widths[7]},} │"
-        row += f" {call['output_tokens']:>{col_widths[8]},} │"
-        print(row)
-    
-    print(bottom_border)
-
-
-def print_summary_cost_report(stage_summary, total_time, total_cost):
-    """Print compact summary table of costs by stage."""
-    if not stage_summary:
-        return
-    
-    print("\n" + "=" * 75)
-    print("                         SUMMARY COST REPORT")
-    print("=" * 75)
-    
-    # Column headers
-    headers = ["Stage", "Time", "Model", "Cost", "Cost%"]
-    col_widths = [14, 10, 14, 12, 8]
-    
-    # Print header row
-    header_row = "│"
-    for header, width in zip(headers, col_widths):
-        header_row += f" {header:^{width}} │"
-    
-    separator = "├" + "┼".join(["─" * (w + 2) for w in col_widths]) + "┤"
-    top_border = "┌" + "┬".join(["─" * (w + 2) for w in col_widths]) + "┐"
-    bottom_border = "└" + "┴".join(["─" * (w + 2) for w in col_widths]) + "┘"
-    
-    print(top_border)
-    print(header_row)
-    print(separator)
-    
-    # Print data rows
-    for stage_name, data in stage_summary.items():
-        cost_pct = (data['cost'] / total_cost * 100) if total_cost > 0 else 0
-        row = "│"
-        row += f" {stage_name:<{col_widths[0]}} │"
-        row += f" {data['time']:>{col_widths[1]-1}.1f}s │"
-        row += f" {data['model']:<{col_widths[2]}} │"
-        row += f" ${data['cost']:>{col_widths[3]-1}.4f} │"
-        row += f" {cost_pct:>{col_widths[4]-1}.1f}% │"
-        print(row)
-    
-    print(separator)
-    
-    # Print totals row
-    total_row = "│"
-    total_row += f" {'TOTAL':<{col_widths[0]}} │"
-    total_row += f" {total_time:>{col_widths[1]-1}.1f}s │"
-    total_row += f" {'':<{col_widths[2]}} │"
-    total_row += f" ${total_cost:>{col_widths[3]-1}.4f} │"
-    total_row += f" {'100.0':>{col_widths[4]-1}}% │"
-    print(total_row)
-    
-    print(bottom_border)
 
 
 def fill_answer_keys(questions, image_path, prompt_text):
