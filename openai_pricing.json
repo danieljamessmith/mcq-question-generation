@@ -1,8 +1,8 @@
 {
   "models": {
     "gpt-5": {
-      "input_cost_per_million": 1.00,
-      "output_cost_per_million": 8.00
+      "input_cost_per_million": 1.25,
+      "output_cost_per_million": 10.00
     },
     "gpt-5.1": {
       "input_cost_per_million": 1.25,
